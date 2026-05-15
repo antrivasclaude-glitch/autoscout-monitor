@@ -2,40 +2,34 @@ name: AutoScout24 Monitor
 
 on:
   schedule:
-    - cron: '0 5 * * *'
-  workflow_dispatch:
+    - cron: '0 5 * * *'   # 07:00 España verano (UTC+2) — cambia a '0 6 * * *' en invierno
+  workflow_dispatch:       # Permite ejecutar manualmente desde la web
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 20
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
-      - name: Crear credenciales Google
-        run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' | base64 -d > google_credentials.json
+      - name: Crear google_credentials.json desde secret
+        run: echo "$GOOGLE_CREDENTIALS_JSON" | base64 -d > google_credentials.json
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
 
       - name: Ejecutar agente
         env:
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          EMAIL_PASSWORD:           ${{ secrets.EMAIL_PASSWORD }}
+          GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: python autoscout_agent.py
-
-      - name: Guardar estado
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: estado_anuncios.json
-          key: estado-${{ github.run_id }}
-
-      - name: Restaurar estado anterior
-        uses: actions/cache/restore@v4
-        with:
-          path: estado_anuncios.json
-          key: estado-
