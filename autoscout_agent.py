@@ -155,10 +155,13 @@ def _parsear_listing_json(item, pais: str) -> dict | None:
             return None
 
         # URL
-        url_raw = _safe_str(item.get("url") or item.get("link") or item.get("detailPageUrl") or "")
+        url_raw = _safe_str(
+            item.get("url") or item.get("link") or item.get("detailPageUrl") or
+            item.get("absoluteUrl") or item.get("shareUrl") or item.get("href") or ""
+        )
         if url_raw.startswith("http"):
             url = url_raw
-        elif url_raw:
+        elif url_raw.startswith("/"):
             url = f"https://www.autoscout24.{pais}{url_raw}"
         else:
             url = ""
@@ -443,42 +446,18 @@ def _extraer_ubicacion_css(card) -> str:
 
 
 def _extraer_url_css(card, pais: str) -> str:
-    """Busca el enlace al anuncio individual usando el ID del artículo."""
-    # ID numérico del anuncio (quitar prefijo "listing-")
-    aid_raw = card.get("id", "") or card.get("data-id", "")
-    aid_num = re.sub(r"[^\d]", "", aid_raw)
+    """Devuelve la URL del anuncio: el primer enlace del card que no sea de dealer/filtro."""
+    base    = f"https://www.autoscout24.{pais}"
+    EXCLUIR = ["haendler", "dealer", "concessionnaire", "rivenditore",
+               "vendeur", "javascript:", "?sort=", "?atype=", "/lst/"]
 
-    # URLs de dealer/filtro que hay que excluir
-    EXCLUIR = ["/haendler/", "/dealer/", "/concessionnaire/",
-               "/rivenditore/", "/vendeur/", "?sort=", "?atype=",
-               "#", "javascript:", "/lst/", "/search"]
-
-    todos = card.find_all("a", href=True)
-
-    # 1. Enlace que contenga el ID numérico del anuncio (más fiable)
-    if aid_num and len(aid_num) >= 6:
-        for a in todos:
-            href = a["href"]
-            if aid_num in href and not any(e in href for e in EXCLUIR):
-                return href if href.startswith("http") else f"https://www.autoscout24.{pais}{href}"
-
-    # 2. Enlace con patrón de URL de anuncio por país
-    PATRONES = ["/anuncios/", "/angebote/", "/annonce/", "/annunci/",
-                "/aanbod/", "/offerte/", "/annonser/", "/ogloszenia/"]
-    for a in todos:
-        href = a["href"]
-        if (any(p in href for p in PATRONES)
-                and not any(e in href for e in EXCLUIR)
-                and len(href) > 15):
-            return href if href.startswith("http") else f"https://www.autoscout24.{pais}{href}"
-
-    # 3. Primer enlace sin ser de dealer ni filtro
-    for a in todos:
-        href = a["href"]
-        if (not any(e in href for e in EXCLUIR)
-                and len(href) > 15
-                and href not in ("/", "")):
-            return href if href.startswith("http") else f"https://www.autoscout24.{pais}{href}"
+    for a in card.find_all("a", href=True):
+        href = a.get("href", "").strip()
+        if not href or len(href) < 6 or href.startswith("#"):
+            continue
+        if any(e in href for e in EXCLUIR):
+            continue
+        return href if href.startswith("http") else base + href
 
     return ""
 
