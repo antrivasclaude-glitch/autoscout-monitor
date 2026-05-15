@@ -1,5 +1,3 @@
-Copiar
-
 {
   "_comentario": "Configuración AutoScout24 Monitor. Las contraseñas van en Variables de entorno (GitHub Secrets), no aquí.",
   "busquedas": [
