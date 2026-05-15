@@ -104,28 +104,35 @@ def es_km_razonable(n: int) -> bool:
 #  SCRAPING — EXTRACCIÓN DESDE __NEXT_DATA__ (método principal)
 # ══════════════════════════════════════════════════════════════
 
-def _buscar_listings_en_json(obj, depth=0):
-    """Busca recursivamente listas de anuncios en el JSON de Next.js."""
-    if depth > 12:
-        return None
-    if isinstance(obj, list) and len(obj) >= 1:
-        primer = obj[0]
-        if isinstance(primer, dict) and any(
-            k in primer for k in ("id", "price", "url", "vehicleDetails", "vehicle")
-        ):
-            return obj
-    if isinstance(obj, dict):
-        for key in ("listings", "entities", "results", "items", "hits", "data"):
-            if key in obj:
-                r = _buscar_listings_en_json(obj[key], depth + 1)
-                if r:
-                    return r
-        for v in obj.values():
-            if isinstance(v, (dict, list)):
-                r = _buscar_listings_en_json(v, depth + 1)
-                if r:
-                    return r
-    return None
+def _recopilar_listings_del_json(data: dict) -> list[dict]:
+    """
+    Recorre todo el JSON de Next.js buscando objetos que parezcan anuncios.
+    Maneja el patrón Redux normalizado (IDs en array + datos en byId/dict).
+    """
+    encontrados = []
+
+    def _buscar(obj, depth=0):
+        if depth > 15:
+            return
+        if isinstance(obj, dict):
+            tiene_precio   = any(k in obj for k in ("price", "pricing", "prices"))
+            tiene_id       = any(k in obj for k in ("id", "guid", "listingId"))
+            tiene_vehiculo = any(k in obj for k in
+                                 ("vehicle", "vehicleDetails", "make", "model",
+                                  "firstRegistration", "mileage"))
+            if tiene_precio and tiene_id and tiene_vehiculo:
+                encontrados.append(obj)
+                return  # no buscar dentro para evitar duplicados
+            for v in obj.values():
+                if isinstance(v, (dict, list)):
+                    _buscar(v, depth + 1)
+        elif isinstance(obj, list):
+            for item in obj:
+                if isinstance(item, (dict, list)):
+                    _buscar(item, depth + 1)
+
+    _buscar(data)
+    return encontrados
 
 
 def _parsear_listing_json(item: dict, pais: str) -> dict | None:
@@ -234,7 +241,7 @@ def extraer_desde_next_data(soup, pais: str) -> list[dict]:
     except json.JSONDecodeError:
         return []
 
-    listings_raw = _buscar_listings_en_json(data)
+    listings_raw = _recopilar_listings_del_json(data)
     if not listings_raw:
         log.debug("No se encontraron listings en __NEXT_DATA__")
         return []
@@ -245,7 +252,7 @@ def extraer_desde_next_data(soup, pais: str) -> list[dict]:
         if a:
             anuncios.append(a)
 
-    log.debug(f"__NEXT_DATA__: {len(anuncios)} anuncios parseados de {len(listings_raw)} items")
+    log.debug(f"__NEXT_DATA__: {len(anuncios)} anuncios parseados de {len(listings_raw)} objetos")
     return anuncios
 
 
@@ -334,36 +341,84 @@ def _extraer_anio_css(card) -> str:
     return ""
 
 
+
+# Tipos de combustible conocidos en ES / DE / EN
+_COMBUSTIBLES = {
+    "gasolina", "diésel", "diesel", "híbrido", "híbrida",
+    "eléctrico", "eléctrica", "glp", "gnc", "gas natural",
+    "hidrógeno", "gasolina/eléctrico", "diésel/eléctrico",
+    "gasolina/gas natural", "gas licuado (glp)",
+    # Alemán
+    "benzin", "elektro", "hybrid", "erdgas", "autogas",
+    "wasserstoff", "plug-in-hybrid", "mild-hybrid",
+    # Inglés
+    "petrol", "electric", "lpg", "cng", "hydrogen",
+}
+
 def _extraer_combustible_css(card) -> str:
-    selectores = [
-        "[data-testid='fuel-type']",
-        "[data-testid='fuel']",
-        "[class*='FuelType']",
-        "[class*='fuel']",
-    ]
-    for sel in selectores:
+    # 1. Selectores data-testid específicos
+    for sel in ["[data-testid='fuel-type']", "[data-testid='fuel']",
+                "[data-testid='fuelType']"]:
         el = card.select_one(sel)
         if el:
             txt = el.get_text(strip=True)
-            if txt and len(txt) < 30:
+            if txt:
                 return txt
+
+    # 2. Buscar cualquier texto que coincida con tipos conocidos
+    for el in card.find_all(string=True):
+        txt = el.strip()
+        if not txt or len(txt) > 40:
+            continue
+        if txt.lower() in _COMBUSTIBLES:
+            return txt
+        # Coincidencia parcial para tipos compuestos
+        for tipo in _COMBUSTIBLES:
+            if len(tipo) > 4 and tipo in txt.lower():
+                return txt
+
     return ""
 
 
 def _extraer_ubicacion_css(card) -> str:
-    selectores = [
-        "[data-testid='location']",
-        "[data-testid='seller-location']",
-        ".cldt-summary-seller-contact-location",
-        "[class*='Location']",
-        "[class*='location']",
-    ]
-    for sel in selectores:
+    # 1. Selectores data-testid específicos
+    for sel in ["[data-testid='location']", "[data-testid='seller-location']",
+                "[data-testid='city']", ".cldt-summary-seller-contact-location"]:
         el = card.select_one(sel)
         if el:
             txt = el.get_text(strip=True)
             if txt and len(txt) < 60:
                 return txt
+
+    # 2. Clases con "location" o "Location" (sin importar el prefijo hash)
+    for el in card.find_all(attrs={"class": True}):
+        clases = " ".join(el.get("class", []))
+        if "ocation" in clases or "seller" in clases.lower():
+            txt = el.get_text(strip=True)
+            # Descartar textos que sean precio, km, año u otros campos
+            if (txt and 2 < len(txt) < 60
+                    and "€" not in txt
+                    and "km" not in txt.lower()
+                    and not re.match(r"^\d{4}$", txt)
+                    and not re.match(r"^[\d\.]+$", txt)):
+                return txt
+
+    # 3. Buscar elemento que contenga un SVG de pin de mapa (📍)
+    #    AutoScout24 suele usar un SVG justo antes del texto de ciudad
+    for svg in card.find_all("svg"):
+        siguiente = svg.find_next_sibling(string=True)
+        if siguiente:
+            txt = siguiente.strip()
+            if txt and len(txt) < 60 and "€" not in txt and "km" not in txt.lower():
+                return txt
+        parent = svg.parent
+        if parent:
+            txt = parent.get_text(strip=True)
+            if (txt and len(txt) < 60 and "€" not in txt
+                    and "km" not in txt.lower()
+                    and not re.match(r"^\d+$", txt)):
+                return txt
+
     return ""
 
 
