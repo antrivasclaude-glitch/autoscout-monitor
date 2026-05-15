@@ -135,34 +135,52 @@ def _recopilar_listings_del_json(data: dict) -> list[dict]:
     return encontrados
 
 
-def _parsear_listing_json(item: dict, pais: str) -> dict | None:
+def _safe_dict(val) -> dict:
+    """Devuelve val si es dict, o {} en caso contrario."""
+    return val if isinstance(val, dict) else {}
+
+def _safe_str(val) -> str:
+    """Devuelve val como string si no es dict/list, o '' en caso contrario."""
+    if val is None or isinstance(val, (dict, list)):
+        return ""
+    return str(val).strip()
+
+def _parsear_listing_json(item, pais: str) -> dict | None:
     """Convierte un anuncio del JSON de Next.js en nuestro diccionario."""
+    if not isinstance(item, dict):
+        return None
     try:
-        aid = str(item.get("id") or item.get("guid") or "")
+        aid = _safe_str(item.get("id") or item.get("guid") or item.get("listingId") or "")
         if not aid:
             return None
 
         # URL
-        url_raw = (item.get("url") or item.get("link") or
-                   item.get("detailPageUrl") or "")
+        url_raw = _safe_str(item.get("url") or item.get("link") or item.get("detailPageUrl") or "")
         if url_raw.startswith("http"):
             url = url_raw
         elif url_raw:
             url = f"https://www.autoscout24.{pais}{url_raw}"
         else:
-            url = f"https://www.autoscout24.{pais}/anuncios/{aid}"
+            url = ""
 
-        # Título
+        # Título — evitar duplicar partes del modelo en la descripción
         titulo = ""
         for key in ("title", "name", "headline"):
-            if item.get(key):
-                titulo = str(item[key]).strip(); break
+            val = item.get(key)
+            if val and isinstance(val, str):
+                titulo = val.strip(); break
         if not titulo:
-            v = item.get("vehicle") or {}
-            make  = (v.get("make") or {}).get("name", "")
-            model = (v.get("model") or {}).get("name", "")
-            desc  = v.get("description", "") or v.get("modelVersionInput", "")
-            titulo = f"{make} {model} {desc}".strip() or "Sin título"
+            v    = _safe_dict(item.get("vehicle"))
+            make = _safe_dict(v.get("make")).get("name", "") or _safe_str(v.get("make"))
+            model= _safe_dict(v.get("model")).get("name", "") or _safe_str(v.get("model"))
+            desc = _safe_str(v.get("description") or v.get("modelVersionInput") or
+                             v.get("version") or "")
+            # Evitar duplicar si desc ya empieza con lo que hay en model
+            if model and desc and desc.lower().startswith(model.lower().split()[-1].lower()):
+                titulo = f"{make} {model} {desc[len(model.split()[-1]):].strip()}".strip()
+            else:
+                titulo = " ".join(filter(None, [make, model, desc])).strip()
+            titulo = re.sub(r'\s+', ' ', titulo) or "Sin título"
 
         # Precio
         precio = 0
@@ -174,43 +192,45 @@ def _parsear_listing_json(item: dict, pais: str) -> dict | None:
         if not es_precio_razonable(precio):
             precio = 0
 
+        # vehicleDetails y vehicle como dicts seguros
+        vd   = _safe_dict(item.get("vehicleDetails"))
+        v_alt= _safe_dict(item.get("vehicle"))
+
         # Año
         anio = ""
-        vd = item.get("vehicleDetails") or item.get("vehicle") or {}
         for key in ("firstRegistration", "firstRegistrationDate", "yearOfProduction", "year"):
-            val = vd.get(key) or item.get(key) or ""
+            val = vd.get(key) or v_alt.get(key) or item.get(key) or ""
+            val = _safe_str(val)
             if val:
-                m = re.search(r"(19|20)\d{2}", str(val))
-                if m:
-                    anio = m.group(); break
+                m = re.search(r"(19|20)\d{2}", val)
+                if m: anio = m.group(); break
 
         # Km
         km_val = 0
         for key in ("mileage", "kilometer", "km", "odometer"):
-            val = vd.get(key) or item.get(key) or 0
-            if val:
+            val = vd.get(key) or v_alt.get(key) or item.get(key) or 0
+            if val and not isinstance(val, (dict, list)):
                 km_val = limpiar_numero(str(val)); break
         km = f"{km_val:,} km".replace(",", ".") if km_val else ""
 
         # Combustible
         combustible = ""
-        for key in ("fuelType", "fuel", "fuelTypeDetails"):
-            val = vd.get(key) or item.get(key) or ""
+        for key in ("fuelType", "fuel", "fuelTypeDetails", "fuelCategory"):
+            val = vd.get(key) or v_alt.get(key) or item.get(key) or ""
             if isinstance(val, dict):
-                val = val.get("name") or val.get("value") or ""
-            if val:
-                combustible = str(val).strip(); break
+                val = val.get("name") or val.get("value") or val.get("key") or ""
+            val = _safe_str(val)
+            if val and len(val) < 40:
+                combustible = val; break
 
         # Ubicación
         ubicacion = ""
-        seller = item.get("seller") or item.get("location") or {}
-        loc = seller.get("location") or seller if isinstance(seller, dict) else {}
+        seller = _safe_dict(item.get("seller"))
+        loc    = _safe_dict(seller.get("location") or item.get("location"))
         for key in ("city", "zip", "region", "countryName", "address"):
-            val = loc.get(key) or ""
+            val = _safe_str(loc.get(key) or "")
             if val:
-                ubicacion = str(val).strip(); break
-        if not ubicacion:
-            ubicacion = (item.get("location") or {}).get("city", "") if isinstance(item.get("location"), dict) else ""
+                ubicacion = val; break
 
         if not aid or precio == 0:
             return None
@@ -423,33 +443,42 @@ def _extraer_ubicacion_css(card) -> str:
 
 
 def _extraer_url_css(card, pais: str) -> str:
-    """Busca el enlace al anuncio individual (no a filtros ni paginación)."""
-    # AutoScout24 listings URL pattern: /anuncios/... o /annonce/... etc
-    patrones = ["/anuncios/", "/annonce/", "/annuncio/", "/offerte/", "/aanbod/"]
-    for a in card.find_all("a", href=True):
-        href = a["href"]
-        if any(p in href for p in patrones):
-            if href.startswith("http"):
-                return href
-            return f"https://www.autoscout24.{pais}{href}"
+    """Busca el enlace al anuncio individual usando el ID del artículo."""
+    # ID numérico del anuncio (quitar prefijo "listing-")
+    aid_raw = card.get("id", "") or card.get("data-id", "")
+    aid_num = re.sub(r"[^\d]", "", aid_raw)
 
-    # Fallback: cualquier enlace con el ID del anuncio
-    aid = card.get("id", "")
-    if aid:
-        for a in card.find_all("a", href=True):
+    # URLs de dealer/filtro que hay que excluir
+    EXCLUIR = ["/haendler/", "/dealer/", "/concessionnaire/",
+               "/rivenditore/", "/vendeur/", "?sort=", "?atype=",
+               "#", "javascript:", "/lst/", "/search"]
+
+    todos = card.find_all("a", href=True)
+
+    # 1. Enlace que contenga el ID numérico del anuncio (más fiable)
+    if aid_num and len(aid_num) >= 6:
+        for a in todos:
             href = a["href"]
-            if aid in href:
-                if href.startswith("http"):
-                    return href
-                return f"https://www.autoscout24.{pais}{href}"
+            if aid_num in href and not any(e in href for e in EXCLUIR):
+                return href if href.startswith("http") else f"https://www.autoscout24.{pais}{href}"
 
-    # Último recurso: primer enlace de la card
-    a = card.select_one("a[href]")
-    if a:
+    # 2. Enlace con patrón de URL de anuncio por país
+    PATRONES = ["/anuncios/", "/angebote/", "/annonce/", "/annunci/",
+                "/aanbod/", "/offerte/", "/annonser/", "/ogloszenia/"]
+    for a in todos:
         href = a["href"]
-        if href.startswith("http"):
-            return href
-        return f"https://www.autoscout24.{pais}{href}"
+        if (any(p in href for p in PATRONES)
+                and not any(e in href for e in EXCLUIR)
+                and len(href) > 15):
+            return href if href.startswith("http") else f"https://www.autoscout24.{pais}{href}"
+
+    # 3. Primer enlace sin ser de dealer ni filtro
+    for a in todos:
+        href = a["href"]
+        if (not any(e in href for e in EXCLUIR)
+                and len(href) > 15
+                and href not in ("/", "")):
+            return href if href.startswith("http") else f"https://www.autoscout24.{pais}{href}"
 
     return ""
 
@@ -472,7 +501,10 @@ def extraer_desde_css(soup, pais: str) -> list[dict]:
                 continue
 
             titulo_el = card.select_one("h2, [data-testid='title'], .cldt-summary-headline")
-            titulo = titulo_el.get_text(strip=True) if titulo_el else "Sin título"
+            if titulo_el:
+                titulo = re.sub(r'\s+', ' ', titulo_el.get_text(separator=" ", strip=True))
+            else:
+                titulo = "Sin título"
 
             precio     = _extraer_precio_css(card)
             km         = _extraer_km_css(card)
@@ -789,42 +821,74 @@ def actualizar_sheets_busqueda(nombre: str, anuncios: list, nuevos: list, bajada
 #  EMAIL
 # ══════════════════════════════════════════════════════════════
 
-def _card_html(a: dict, tipo: str) -> str:
-    precio_str = f"{a.get('precio', 0):,} €".replace(",", ".")
-    if tipo == "bajada":
-        p_ant = f"{a.get('precio_anterior', 0):,} €".replace(",", ".")
-        dif   = f"{a.get('diferencia_precio', 0):,} €".replace(",", ".")
-        pct   = a.get("porcentaje_bajada", 0)
-        precio_html = (
-            f'<div style="color:#d32f2f;font-weight:bold;margin-top:4px;">'
-            f'⬇ Antes: {p_ant} → Ahora: {precio_str} (-{dif} / -{pct}%)</div>'
-        )
-    else:
-        precio_html = f'<div style="color:#1565c0;font-weight:bold;margin-top:4px;">💶 {precio_str}</div>'
+def _tabla_anuncios_html(anuncios: list, tipo: str) -> str:
+    """Genera una tabla HTML compacta con una fila por anuncio."""
+    if not anuncios:
+        return ""
 
-    anio        = a.get("anio", "") or "—"
-    km          = a.get("km", "")  or "—"
-    combustible = a.get("combustible", "") or "—"
-    ubicacion   = a.get("ubicacion", "")  or "—"
-    url         = a.get("url", "#")
-    titulo      = a.get("titulo", "Sin título")
+    if tipo == "nuevo":
+        cabecera_color = "#1565c0"
+        titulo_seccion = f"🆕 Nuevos anuncios ({len(anuncios)})"
+    else:
+        cabecera_color = "#c62828"
+        titulo_seccion = f"⬇️ Bajadas de precio ({len(anuncios)})"
+
+    filas = []
+    for i, a in enumerate(anuncios):
+        bg = "#ffffff" if i % 2 == 0 else "#f8f9fa"
+        precio_str = f"{a.get('precio', 0):,} €".replace(",", ".")
+        anio   = a.get("anio", "") or "—"
+        km     = a.get("km", "") or "—"
+        comb   = a.get("combustible", "") or "—"
+        ubic   = a.get("ubicacion", "") or "—"
+        url    = a.get("url", "") or ""
+        titulo = a.get("titulo", "Sin título")
+
+        if tipo == "bajada":
+            p_ant = f"{a.get('precio_anterior', 0):,} €".replace(",", ".")
+            pct   = a.get("porcentaje_bajada", 0)
+            precio_cell = (
+                f'<span style="text-decoration:line-through;color:#999;">{p_ant}</span> '
+                f'<span style="color:#c62828;font-weight:bold;">{precio_str}</span> '
+                f'<span style="color:#c62828;font-size:11px;">(-{pct}%)</span>'
+            )
+        else:
+            precio_cell = f'<span style="color:#1565c0;font-weight:bold;">{precio_str}</span>'
+
+        link_cell = (
+            f'<a href="{url}" style="background:#1565c0;color:white;padding:3px 9px;'
+            f'border-radius:4px;text-decoration:none;font-size:11px;white-space:nowrap;">Ver →</a>'
+        ) if url else "—"
+
+        filas.append(f"""
+        <tr style="background:{bg};border-bottom:1px solid #e0e0e0;">
+            <td style="padding:7px 10px;font-size:12px;max-width:220px;">{titulo}</td>
+            <td style="padding:7px 10px;font-size:12px;white-space:nowrap;">{precio_cell}</td>
+            <td style="padding:7px 10px;font-size:12px;text-align:center;">{anio}</td>
+            <td style="padding:7px 10px;font-size:12px;white-space:nowrap;">{km}</td>
+            <td style="padding:7px 10px;font-size:12px;">{comb}</td>
+            <td style="padding:7px 10px;font-size:12px;max-width:160px;">{ubic}</td>
+            <td style="padding:7px 10px;text-align:center;">{link_cell}</td>
+        </tr>""")
 
     return f"""
-    <div style="border:1px solid #e0e0e0;border-radius:8px;padding:14px;
-                margin-bottom:12px;background:#fafafa;">
-        <div style="font-weight:600;font-size:15px;color:#212121;">{titulo}</div>
-        {precio_html}
-        <div style="color:#616161;font-size:13px;margin-top:6px;">
-            📅 {anio} &nbsp;|&nbsp; 🛣️ {km} &nbsp;|&nbsp;
-            ⛽ {combustible} &nbsp;|&nbsp; 📍 {ubicacion}
-        </div>
-        <div style="margin-top:8px;">
-            <a href="{url}"
-               style="background:#1565c0;color:white;padding:6px 14px;
-                      border-radius:4px;text-decoration:none;font-size:13px;">
-                Ver anuncio →
-            </a>
-        </div>
+    <h3 style="color:{cabecera_color};font-size:14px;margin:16px 0 8px;">{titulo_seccion}</h3>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;
+                  border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;">
+        <thead>
+            <tr style="background:{cabecera_color};color:white;text-align:left;">
+                <th style="padding:8px 10px;font-weight:600;">Título</th>
+                <th style="padding:8px 10px;font-weight:600;">Precio</th>
+                <th style="padding:8px 10px;font-weight:600;">Año</th>
+                <th style="padding:8px 10px;font-weight:600;">Km</th>
+                <th style="padding:8px 10px;font-weight:600;">Combustible</th>
+                <th style="padding:8px 10px;font-weight:600;">Ubicación</th>
+                <th style="padding:8px 10px;font-weight:600;">Link</th>
+            </tr>
+        </thead>
+        <tbody>{"".join(filas)}</tbody>
+    </table>
     </div>"""
 
 
@@ -832,30 +896,16 @@ def _seccion_busqueda_html(nombre: str, nuevos: list, bajadas: list) -> str:
     if not nuevos and not bajadas:
         return ""
 
-    partes = [f"""
-    <div style="margin:20px 0 8px;padding:10px 14px;background:#e8eaf6;
+    cabecera = f"""
+    <div style="margin:24px 0 10px;padding:10px 14px;background:#e8eaf6;
                 border-left:4px solid #3949ab;border-radius:0 6px 6px 0;">
         <strong style="color:#1a237e;font-size:15px;">🔍 {nombre}</strong>
         <span style="color:#5c6bc0;font-size:12px;margin-left:10px;">
             {len(nuevos)} nuevos · {len(bajadas)} bajadas
         </span>
-    </div>"""]
+    </div>"""
 
-    if nuevos:
-        partes.append(
-            f'<h3 style="color:#1565c0;font-size:14px;margin:12px 0 8px;">'
-            f'🆕 Nuevos anuncios ({len(nuevos)})</h3>'
-        )
-        partes.extend(_card_html(a, "nuevo") for a in nuevos)
-
-    if bajadas:
-        partes.append(
-            f'<h3 style="color:#c62828;font-size:14px;margin:12px 0 8px;">'
-            f'⬇️ Bajadas de precio ({len(bajadas)})</h3>'
-        )
-        partes.extend(_card_html(a, "bajada") for a in bajadas)
-
-    return "\n".join(partes)
+    return cabecera + _tabla_anuncios_html(nuevos, "nuevo") + _tabla_anuncios_html(bajadas, "bajada")
 
 
 def enviar_email(resultados: list[dict], url_sheets: str):
