@@ -1,20 +1,54 @@
+Copiar
+
 {
-    "_comentario": "Configuración del agente AutoScout24 — edita solo este archivo",
-
-    "pythonanywhere": {
-        "usuario": "antrivas"
+  "_comentario": "Configuración AutoScout24 Monitor. Las contraseñas van en Variables de entorno (GitHub Secrets), no aquí.",
+  "busquedas": [
+    {
+      "nombre": "VW Golf - España",
+      "activa": false,
+      "marca": "volkswagen",
+      "modelo": "golf",
+      "precio_min": null,
+      "precio_max": 25000,
+      "anio_min": 2018,
+      "anio_max": null,
+      "km_min": null,
+      "km_max": 100000,
+      "pais": "es",
+      "max_paginas": 5,
+      "pausa_seg": 3
     },
-
-    "busqueda": {
-        "marca":      "volkswagen",
-        "modelo":     "golf",
-        "precio_max": 25000,
-        "anio_min":   2018,
-        "km_max":     100000,
-        "pais":       "es",
-        "max_paginas": 5,
-        "pausa_entre_paginas_seg": 3
+    {
+      "nombre": "Mercedes GLC - España",
+      "activa": true,
+      "marca": "mercedes-benz",
+      "modelo": "glc-220",
+      "precio_min": null,
+      "precio_max": 45000,
+      "anio_min": 2017,
+      "anio_max": null,
+      "km_min": null,
+      "km_max": 80000,
+      "pais": "es",
+      "max_paginas": 10,
+      "pausa_seg": 3
     },
+    {
+      "nombre": "Mercedes GLC - Alemania",
+      "activa": true,
+      "marca": "mercedes-benz",
+      "modelo": "glc-220",
+      "precio_min": null,
+      "precio_max": 45000,
+      "anio_min": 2017,
+      "anio_max": null,
+      "km_min": null,
+      "km_max": 80000,
+      "pais": "de",
+      "max_paginas": 3,
+      "pausa_seg": 3
+    }
+  ],
 
     "email": {
         "origen":   "ant.rivas.claude@gmail.com",
