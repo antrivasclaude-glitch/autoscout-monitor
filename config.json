@@ -1,5 +1,6 @@
 {
-  "_comentario": "Configuración AutoScout24 Monitor.  Las contraseñas van en Variables de entorno (GitHub Secrets), no aquí.",
+  "_comentario": "Configuración AutoScout24 Monitor. Las contraseñas van en Variables de entorno (GitHub Secrets), no aquí.",
+  "_fuel_valores": "D=Diésel, B=Gasolina, E=Eléctrico, 2=Híbrido Gasolina, 3=Híbrido Diésel, null=Sin filtro",
   "busquedas": [
     {
       "nombre": "VW Golf - España",
@@ -12,13 +13,14 @@
       "anio_max": null,
       "km_min": null,
       "km_max": 100000,
+      "fuel": "D",
       "pais": "es",
       "max_paginas": 5,
       "pausa_seg": 3
     },
     {
       "nombre": "Mercedes GLC - España",
-      "activa": true,
+      "activa": false,
       "marca": "mercedes-benz",
       "modelo": "glc-220",
       "precio_min": null,
@@ -27,6 +29,7 @@
       "anio_max": null,
       "km_min": null,
       "km_max": 80000,
+      "fuel": "D",
       "pais": "es",
       "max_paginas": 10,
       "pausa_seg": 3
@@ -37,32 +40,30 @@
       "marca": "mercedes-benz",
       "modelo": "glc-220",
       "precio_min": null,
-      "precio_max": 45000,
+      "precio_max": 35000,
       "anio_min": 2017,
-      "anio_max": null,
+      "anio_max": 2022,
       "km_min": null,
       "km_max": 80000,
+      "fuel": "D",
       "pais": "de",
       "max_paginas": 3,
       "pausa_seg": 3
     }
   ],
-
-    "email": {
-        "origen":   "ant.rivas.claude@gmail.com",
-        "destino":  "ant.rivas@gmail.com",
-        "servidor_smtp": "smtp.gmail.com",
-        "puerto_smtp":   465
-    },
-
-    "google_sheets": {
-        "nombre_hoja": "AutoScout24 Monitor",
-        "credentials_file": "google_credentials.json"
-    },
-
-    "log": {
-        "nivel": "INFO",
-        "max_bytes":    1048576,
-        "backup_count": 5
-    }
+  "email": {
+    "origen": "ant.rivas.claude@gmail.com",
+    "destino": "ant.rivas@gmail.com",
+    "servidor_smtp": "smtp.gmail.com",
+    "puerto_smtp": 465
+  },
+  "google_sheets": {
+    "nombre_hoja": "AutoScout24 Monitor",
+    "credentials_file": "google_credentials.json"
+  },
+  "log": {
+    "nivel": "INFO",
+    "max_bytes": 1048576,
+    "backup_count": 5
+  }
 }
