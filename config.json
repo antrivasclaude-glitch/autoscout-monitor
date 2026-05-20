@@ -42,12 +42,12 @@
       "precio_min": null,
       "precio_max": 35000,
       "anio_min": 2017,
-      "anio_max": 2022,
+      "anio_max": 2021,
       "km_min": null,
-      "km_max": 80000,
+      "km_max": 100000,
       "fuel": "D",
       "pais": "de",
-      "max_paginas": 3,
+      "max_paginas": 10,
       "pausa_seg": 3
     }
   ],
