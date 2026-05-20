@@ -189,9 +189,25 @@ def _parsear_listing_json(item, pais: str) -> dict | None:
         precio = 0
         p = item.get("price") or item.get("pricing") or {}
         if isinstance(p, dict):
-            precio = int(p.get("value") or p.get("amount") or p.get("gross") or 0)
+            # 1) campos numéricos directos
+            raw = p.get("value") or p.get("amount") or p.get("gross") or 0
+            if raw:
+                try: precio = int(raw)
+                except: precio = limpiar_numero(str(raw))
+            # 2) priceFormatted: "€ 28.899" o "28.899 €"
+            if not es_precio_razonable(precio):
+                pf = _safe_str(p.get("priceFormatted", ""))
+                if pf:
+                    precio = limpiar_numero(pf)
         elif isinstance(p, (int, float)):
             precio = int(p)
+        # 3) fallback: tracking.price (siempre es numérico como string)
+        if not es_precio_razonable(precio):
+            tracking = _safe_dict(item.get("tracking"))
+            pt = _safe_str(tracking.get("price", ""))
+            if pt:
+                try: precio = int(pt)
+                except: precio = limpiar_numero(pt)
         if not es_precio_razonable(precio):
             precio = 0
 
@@ -529,24 +545,44 @@ HEADERS = {
 
 
 def construir_url(b: dict, pagina: int = 1) -> str:
-    """Construye la URL de búsqueda con solo los filtros que tengan valor."""
+    """Construye la URL de busqueda con los filtros configurados.
+
+    Parametros fijos (igual que una busqueda manual en AutoScout24):
+      atype=C                  -> coches
+      cy=E                     -> pais del TLD
+      damaged_listing=exclude  -> excluir accidentados
+      desc=0                   -> orden ascendente
+      powertype=kw             -> potencia en kW
+      sort=price               -> ordenar por precio ascendente
+      ustate=N,U               -> nuevos y de ocasion
+    """
     marca  = b["marca"].lower().replace(" ", "-")
     modelo = b["modelo"].lower().replace(" ", "-")
     pais   = b.get("pais", "es")
     base   = f"https://www.autoscout24.{pais}/lst/{marca}/{modelo}"
 
-    params = [f"sort=age", "desc=0", f"page={pagina}"]
+    params = [
+        "atype=C",
+        "cy=E",
+        "damaged_listing=exclude",
+        "desc=0",
+        f"page={pagina}",
+        "powertype=kw",
+        "sort=price",
+        "ustate=N%2CU",
+    ]
 
     def add(key, val):
         if val is not None and val != "" and val != 0:
             params.append(f"{key}={val}")
 
-    add("pricefrom", b.get("precio_min"))
-    add("priceto",   b.get("precio_max"))
+    add("fuel",      b.get("fuel"))
     add("fregfrom",  b.get("anio_min"))
     add("fregto",    b.get("anio_max"))
     add("kmfrom",    b.get("km_min"))
     add("kmto",      b.get("km_max"))
+    add("pricefrom", b.get("precio_min"))
+    add("priceto",   b.get("precio_max"))
 
     return base + "?" + "&".join(params)
 
