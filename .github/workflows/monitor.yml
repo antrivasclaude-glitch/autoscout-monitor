@@ -2,8 +2,28 @@ name: AutoScout24 Monitor
 
 on:
   schedule:
-    - cron: '0 5 * * *'
+    - cron: '0 5 * * *'   # Cada día 05:00 UTC = 07:00 España (verano)
+
+  # ─── WEBHOOK / DISPARO EXTERNO ───────────────────────────────────────────
+  # Permite lanzar el workflow manualmente desde la UI de GitHub o
+  # mediante la API de GitHub con una simple petición HTTP.
+  #
+  # Desde terminal (reemplaza TOKEN, OWNER y REPO):
+  #   curl -X POST \
+  #     -H "Accept: application/vnd.github.v3+json" \
+  #     -H "Authorization: token TU_GITHUB_TOKEN" \
+  #     https://api.github.com/repos/OWNER/REPO/actions/workflows/monitor.yml/dispatches \
+  #     -d '{"ref":"main"}'
+  #
+  # Con un GitHub App token o PAT (Personal Access Token) con permiso
+  # "Actions: write" y "Contents: read" es suficiente.
+  # ─────────────────────────────────────────────────────────────────────────
   workflow_dispatch:
+    inputs:
+      razon:
+        description: 'Motivo de ejecución manual (opcional)'
+        required: false
+        default: 'Ejecución manual'
 
 jobs:
   monitor:
