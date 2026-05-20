@@ -12,6 +12,7 @@ import requests
 from datetime import datetime, date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 from bs4 import BeautifulSoup
 import gspread
 from google.oauth2.service_account import Credentials
@@ -211,26 +212,57 @@ def _parsear_listing_json(item, pais: str) -> dict | None:
         if not es_precio_razonable(precio):
             precio = 0
 
-        # vehicleDetails y vehicle como dicts seguros
-        vd   = _safe_dict(item.get("vehicleDetails"))
+        # vehicleDetails puede ser lista [{"iconName":..,"data":..}] o dict
+        vd_raw = item.get("vehicleDetails")
+        vd_list = vd_raw if isinstance(vd_raw, list) else []
+        vd_icon = {d.get("iconName",""): d.get("data","") for d in vd_list if isinstance(d, dict)}
+        vd   = _safe_dict(vd_raw)
         v_alt= _safe_dict(item.get("vehicle"))
+        tracking_d = _safe_dict(item.get("tracking"))
 
-        # Año
+        # Año — orden de prioridad: tracking.firstRegistration > vehicleDetails > vehicle
         anio = ""
-        for key in ("firstRegistration", "firstRegistrationDate", "yearOfProduction", "year"):
-            val = vd.get(key) or v_alt.get(key) or item.get(key) or ""
-            val = _safe_str(val)
-            if val:
-                m = re.search(r"(19|20)\d{2}", val)
-                if m: anio = m.group(); break
+        # 1. tracking.firstRegistration: "MM-YYYY" o "YYYY"
+        fr_tracking = _safe_str(tracking_d.get("firstRegistration", ""))
+        if fr_tracking:
+            m_yr = re.search(r"(19|20)\d{2}", fr_tracking)
+            if m_yr: anio = m_yr.group()
+        # 2. vehicleDetails lista — iconName "calendar": "04/2019"
+        if not anio:
+            cal_str = vd_icon.get("calendar", "")
+            if cal_str:
+                m_yr = re.search(r"(19|20)\d{2}", cal_str)
+                if m_yr: anio = m_yr.group()
+        # 3. vehicle dict
+        if not anio:
+            for key in ("firstRegistration", "firstRegistrationDate", "yearOfProduction", "year"):
+                val = _safe_str(v_alt.get(key) or vd.get(key) or item.get(key) or "")
+                if val:
+                    m_yr = re.search(r"(19|20)\d{2}", val)
+                    if m_yr: anio = m_yr.group(); break
 
-        # Km
-        km_val = 0
-        for key in ("mileage", "kilometer", "km", "odometer"):
-            val = vd.get(key) or v_alt.get(key) or item.get(key) or 0
-            if val and not isinstance(val, (dict, list)):
-                km_val = limpiar_numero(str(val)); break
-        km = f"{km_val:,} km".replace(",", ".") if km_val else ""
+        # Km — orden de prioridad: vehicle.mileageInKm > vehicleDetails lista > tracking.mileage
+        km = ""
+        # 1. vehicle.mileageInKm: "96.217 km"
+        mik = _safe_str(v_alt.get("mileageInKm", ""))
+        if mik:
+            km_val = limpiar_numero(mik)
+            if es_km_razonable(km_val) and km_val > 0:
+                km = f"{km_val:,} km".replace(",", ".")
+        # 2. vehicleDetails lista — iconName "mileage_odometer"
+        if not km:
+            od_str = vd_icon.get("mileage_odometer", "")
+            if od_str:
+                km_val = limpiar_numero(od_str)
+                if es_km_razonable(km_val) and km_val > 0:
+                    km = f"{km_val:,} km".replace(",", ".")
+        # 3. tracking.mileage (número puro)
+        if not km:
+            km_t = _safe_str(tracking_d.get("mileage", ""))
+            if km_t:
+                km_val = limpiar_numero(km_t)
+                if es_km_razonable(km_val) and km_val > 0:
+                    km = f"{km_val:,} km".replace(",", ".")
 
         # Combustible
         combustible = ""
@@ -544,26 +576,32 @@ HEADERS = {
 }
 
 
-def construir_url(b: dict, pagina: int = 1) -> str:
-    """Construye la URL de busqueda con los filtros configurados.
+# Mapa de código de país (config "pais") → parámetro cy= de AutoScout24
+_PAIS_A_CY = {
+    "es": "E", "de": "D", "fr": "F", "it": "I",
+    "be": "B", "nl": "NL", "at": "A", "lu": "L",
+}
 
-    Parametros fijos (igual que una busqueda manual en AutoScout24):
-      atype=C                  -> coches
-      cy=E                     -> pais del TLD
-      damaged_listing=exclude  -> excluir accidentados
-      desc=0                   -> orden ascendente
-      powertype=kw             -> potencia en kW
-      sort=price               -> ordenar por precio ascendente
-      ustate=N,U               -> nuevos y de ocasion
+def construir_url(b: dict, pagina: int = 1) -> str:
+    """Construye la URL de búsqueda.
+
+    - Dominio SIEMPRE autoscout24.es (idioma castellano).
+    - El país de búsqueda se controla con cy= según config "pais":
+        es→E, de→D, fr→F, it→I, be→B, nl→NL, at→A, lu→L
+    - Parámetros fijos: atype=C, damaged_listing=exclude, desc=0,
+      powertype=kw, sort=price, ustate=N%2CU
     """
     marca  = b["marca"].lower().replace(" ", "-")
     modelo = b["modelo"].lower().replace(" ", "-")
-    pais   = b.get("pais", "es")
-    base   = f"https://www.autoscout24.{pais}/lst/{marca}/{modelo}"
+    pais   = b.get("pais", "es").lower()
+    cy     = _PAIS_A_CY.get(pais, "E")
+
+    # Siempre autoscout24.es para obtener resultados en castellano
+    base = f"https://www.autoscout24.es/lst/{marca}/{modelo}"
 
     params = [
         "atype=C",
-        "cy=E",
+        f"cy={cy}",
         "damaged_listing=exclude",
         "desc=0",
         f"page={pagina}",
@@ -712,6 +750,7 @@ def cargar_estado(nombre_busqueda: str) -> dict:
         return {}
 
 def guardar_estado(nombre_busqueda: str, anuncios: list[dict]):
+    """Guarda solo {id: precio} para mantenerse bien por debajo del límite de 50000 chars."""
     try:
         sp  = conectar_sheets()
         nom = _nombre_hoja_estado(nombre_busqueda)
@@ -719,8 +758,11 @@ def guardar_estado(nombre_busqueda: str, anuncios: list[dict]):
             ws = sp.worksheet(nom)
         except gspread.WorksheetNotFound:
             ws = sp.add_worksheet(nom, rows=1, cols=1)
-        estado = {a["id"]: a for a in anuncios}
-        ws.update("A1", [[json.dumps(estado, ensure_ascii=False)]])
+        # Guardar solo precio para minimizar tamaño (evita límite de 50000 chars por celda)
+        estado = {a["id"]: {"precio": a["precio"]} for a in anuncios}
+        json_str = json.dumps(estado, ensure_ascii=False, separators=(",", ":"))
+        log.debug(f"[{nombre_busqueda}] Estado JSON: {len(json_str)} chars para {len(estado)} anuncios")
+        ws.update([[json_str]], "A1")  # nuevo orden gspread 6.x
         log.info(f"[{nombre_busqueda}] Estado guardado — {len(estado)} anuncios")
     except Exception as e:
         log.error(f"Error guardando estado [{nombre_busqueda}]: {e}", exc_info=True)
@@ -799,18 +841,23 @@ def actualizar_sheets_busqueda(nombre: str, anuncios: list, nuevos: list, bajada
             if fila
         }
 
-        nuevas_filas, actualizadas = [], 0
+        nuevas_filas = []
+        batch_updates = []  # acumular actualizaciones para un solo batch_update
         for a in anuncios:
             f = _fila(a, ids_nuevos, ids_bajadas)
             if a["id"] in ids_existentes:
                 n = ids_existentes[a["id"]]
-                ws.update(f"A{n}:M{n}", [f])
-                actualizadas += 1
+                batch_updates.append({"range": f"A{n}:M{n}", "values": [f]})
             else:
                 nuevas_filas.append(f)
+
+        # Actualizar filas existentes en un solo batch (evita 429)
+        if batch_updates:
+            ws.batch_update(batch_updates)
+
         if nuevas_filas:
             ws.append_rows(nuevas_filas)
-        log.info(f"  Sheets '{nombre_ws}': +{len(nuevas_filas)} nuevas, {actualizadas} actualizadas")
+        log.info(f"  Sheets '{nombre_ws}': +{len(nuevas_filas)} nuevas, {len(batch_updates)} actualizadas")
 
         # ── Hoja del día ──────────────────────────────────────
         nombre_hoy = f"{date.today().isoformat()} {nombre[:20]}"
@@ -822,7 +869,7 @@ def actualizar_sheets_busqueda(nombre: str, anuncios: list, nuevos: list, bajada
 
         filas_hoy = [CABECERAS] + [_fila(a, ids_nuevos, ids_bajadas) for a in (nuevos + bajadas)]
         if len(filas_hoy) > 1:
-            ws_hoy.update("A1", filas_hoy)
+            ws_hoy.update(filas_hoy, "A1")  # nuevo orden gspread 6.x
             log.info(f"  Hoja del día: {len(filas_hoy)-1} entradas")
 
         return sp.url
@@ -907,86 +954,76 @@ def _tabla_anuncios_html(anuncios: list, tipo: str) -> str:
     </div>"""
 
 
-def _seccion_busqueda_html(nombre: str, nuevos: list, bajadas: list) -> str:
+def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: str):
+    """Envía un email por búsqueda con el cuerpo HTML + adjunto JSON de los datos."""
     if not nuevos and not bajadas:
-        return ""
-
-    cabecera = f"""
-    <div style="margin:24px 0 10px;padding:10px 14px;background:#e8eaf6;
-                border-left:4px solid #3949ab;border-radius:0 6px 6px 0;">
-        <strong style="color:#1a237e;font-size:15px;">🔍 {nombre}</strong>
-        <span style="color:#5c6bc0;font-size:12px;margin-left:10px;">
-            {len(nuevos)} nuevos · {len(bajadas)} bajadas
-        </span>
-    </div>"""
-
-    return cabecera + _tabla_anuncios_html(nuevos, "nuevo") + _tabla_anuncios_html(bajadas, "bajada")
-
-
-def enviar_email(resultados: list[dict], url_sheets: str):
-    """
-    resultados: lista de dicts con keys nombre, nuevos, bajadas
-    """
-    total_nuevos  = sum(len(r["nuevos"])  for r in resultados)
-    total_bajadas = sum(len(r["bajadas"]) for r in resultados)
-
-    if total_nuevos == 0 and total_bajadas == 0:
-        log.info("Sin cambios hoy — no se envía email")
+        log.info(f"[{nombre}] Sin cambios — no se envía email")
         return
 
     hoy = date.today().strftime("%d/%m/%Y")
     em  = CFG["email"]
+    n_nuevos  = len(nuevos)
+    n_bajadas = len(bajadas)
 
-    secciones = "\n".join(
-        _seccion_busqueda_html(r["nombre"], r["nuevos"], r["bajadas"])
-        for r in resultados
-        if r["nuevos"] or r["bajadas"]
-    )
-
-    busquedas_activas = ", ".join(r["nombre"] for r in resultados)
-
+    # ── Cuerpo HTML ───────────────────────────────────────────
     link_sheets = (
         f'<p style="margin-top:20px;"><a href="{url_sheets}" '
         f'style="background:#388e3c;color:white;padding:8px 18px;'
         f'border-radius:4px;text-decoration:none;">📊 Ver hoja de cálculo</a></p>'
     ) if url_sheets else ""
 
+    tablas = _tabla_anuncios_html(nuevos, "nuevo") + _tabla_anuncios_html(bajadas, "bajada")
+
     html = f"""
-    <html><body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:20px;">
+    <html><body style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;padding:20px;">
         <div style="background:#1565c0;color:white;padding:16px 24px;border-radius:8px 8px 0 0;">
-            <h1 style="margin:0;font-size:20px;">🚗 AutoScout24 Monitor</h1>
+            <h1 style="margin:0;font-size:20px;">🚗 AutoScout24 — {nombre}</h1>
             <div style="opacity:.85;font-size:13px;margin-top:4px;">
-                {hoy} &nbsp;|&nbsp; {total_nuevos} nuevos &nbsp;·&nbsp; {total_bajadas} bajadas
+                {hoy} &nbsp;|&nbsp; {n_nuevos} nuevos &nbsp;·&nbsp; {n_bajadas} bajadas de precio
             </div>
         </div>
         <div style="background:white;border:1px solid #e0e0e0;border-top:none;
                     padding:20px;border-radius:0 0 8px 8px;">
-            {secciones}
+            {tablas}
             {link_sheets}
             <hr style="margin-top:24px;border:none;border-top:1px solid #eee;">
-            <p style="color:#9e9e9e;font-size:11px;">Búsquedas: {busquedas_activas}</p>
+            <p style="color:#9e9e9e;font-size:11px;">Adjunto: datos JSON de esta búsqueda</p>
         </div>
     </body></html>"""
 
+    # ── Adjunto JSON ──────────────────────────────────────────
+    payload = {
+        "busqueda":  nombre,
+        "fecha":     date.today().isoformat(),
+        "nuevos":    nuevos,
+        "bajadas":   bajadas,
+    }
+    json_bytes = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
+    nombre_fichero = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}.json"
+
     try:
-        msg = MIMEMultipart("alternative")
+        msg = MIMEMultipart("mixed")
         msg["Subject"] = (
-            f"🚗 AutoScout24 — {total_nuevos} nuevos, {total_bajadas} bajadas — {hoy}"
+            f"🚗 AutoScout24 [{nombre}] — {n_nuevos} nuevos, {n_bajadas} bajadas — {hoy}"
         )
         msg["From"] = em["origen"]
         msg["To"]   = em["destino"]
         msg.attach(MIMEText(html, "html"))
 
+        adjunto = MIMEApplication(json_bytes, _subtype="json")
+        adjunto["Content-Disposition"] = f'attachment; filename="{nombre_fichero}"'
+        msg.attach(adjunto)
+
         with smtplib.SMTP_SSL(em["servidor_smtp"], em["puerto_smtp"]) as server:
             server.login(em["origen"], em["password"])
             server.sendmail(em["origen"], em["destino"], msg.as_string())
 
-        log.info(f"Email enviado a {em['destino']} ({total_nuevos} nuevos, {total_bajadas} bajadas)")
+        log.info(f"[{nombre}] Email enviado a {em['destino']} ({n_nuevos} nuevos, {n_bajadas} bajadas)")
 
     except smtplib.SMTPAuthenticationError:
         log.error("Error autenticación SMTP — usa contraseña de APLICACIÓN de Gmail (16 chars)")
     except Exception as e:
-        log.error(f"Error enviando email: {e}", exc_info=True)
+        log.error(f"Error enviando email [{nombre}]: {e}", exc_info=True)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -1036,12 +1073,13 @@ def main():
             # 5. Guardar estado
             guardar_estado(nombre, anuncios)
 
-            resultados.append({"nombre": nombre, "nuevos": nuevos, "bajadas": bajadas})
+            resultados.append({"nombre": nombre, "nuevos": nuevos, "bajadas": bajadas, "url_sheets": url_sheets})
 
-        # 6. Email con resultados de todas las búsquedas
+        # 6. Email independiente por cada búsqueda con cambios
         log.info(sep)
-        log.info("Enviando email de resumen")
-        enviar_email(resultados, url_sheets)
+        log.info("Enviando emails por búsqueda")
+        for r in resultados:
+            enviar_email_busqueda(r["nombre"], r["nuevos"], r["bajadas"], r.get("url_sheets", url_sheets))
 
     except Exception as e:
         log.critical(f"Error crítico: {e}", exc_info=True)
