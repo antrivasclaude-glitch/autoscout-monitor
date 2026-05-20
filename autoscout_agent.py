@@ -633,14 +633,15 @@ def obtener_anuncios_pagina(url: str, pais: str) -> list[dict]:
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "lxml")
 
-        # Intentar __NEXT_DATA__ primero
-        anuncios = extraer_desde_next_data(soup, pais)
+        # Siempre usamos autoscout24.es como dominio de scraping,
+        # por lo que el JSON devuelve rutas /anuncios/... → siempre base "es"
+        anuncios = extraer_desde_next_data(soup, "es")
         if anuncios:
             log.info(f"  JSON: {len(anuncios)} anuncios")
             return anuncios
 
         # Fallback CSS
-        anuncios = extraer_desde_css(soup, pais)
+        anuncios = extraer_desde_css(soup, "es")
         log.info(f"  CSS:  {len(anuncios)} anuncios")
         return anuncios
 
