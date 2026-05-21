@@ -7,7 +7,7 @@ AutoScout24 Agent — Versión GitHub Actions
 - Scraping: extracción desde JSON de Next.js + fallback CSS mejorado
 """
 
-import os, sys, json, time, base64, re, smtplib, logging, tempfile
+import os, sys, json, time, base64, re, smtplib, logging, tempfile, csv, io, unicodedata
 import requests
 from datetime import datetime, date
 from email.mime.multipart import MIMEMultipart
@@ -955,7 +955,7 @@ def _tabla_anuncios_html(anuncios: list, tipo: str) -> str:
     </div>"""
 
 
-def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: str):
+def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: str, filas_hist: list = None, adjuntar_hoja: bool = False):
     """Envía un email por búsqueda con el cuerpo HTML + adjunto JSON de los datos."""
     if not nuevos and not bajadas:
         log.info(f"[{nombre}] Sin cambios — no se envía email")
@@ -1011,9 +1011,24 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
         msg["To"]   = em["destino"]
         msg.attach(MIMEText(html, "html"))
 
+        # Adjunto 1: JSON del día
         adjunto = MIMEApplication(json_bytes, _subtype="json")
         adjunto["Content-Disposition"] = f'attachment; filename="{nombre_fichero}"'
         msg.attach(adjunto)
+
+        # Adjunto 2: CSV histórico completo (si adjuntar_hoja=true en config)
+        if adjuntar_hoja and filas_hist:
+            buf = io.StringIO()
+            campos = list(filas_hist[0].keys()) if filas_hist else []
+            w = csv.DictWriter(buf, fieldnames=campos, extrasaction="ignore")
+            w.writeheader()
+            w.writerows(filas_hist)
+            csv_bytes = buf.getvalue().encode("utf-8-sig")  # BOM para Excel
+            csv_name  = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}_completo.csv"
+            adj_csv = MIMEApplication(csv_bytes, _subtype="csv")
+            adj_csv["Content-Disposition"] = f'attachment; filename="{csv_name}"'
+            msg.attach(adj_csv)
+            log.info(f"[{nombre}] CSV histórico adjunto: {csv_name} ({len(filas_hist)} filas)")
 
         with smtplib.SMTP_SSL(em["servidor_smtp"], em["puerto_smtp"]) as server:
             server.login(em["origen"], em["password"])
@@ -1027,13 +1042,182 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
         log.error(f"Error enviando email [{nombre}]: {e}", exc_info=True)
 
 
+
+# ══════════════════════════════════════════════════════════════
+#  LECTURA COMPLETA SHEETS (histórico para dashboard)
+# ══════════════════════════════════════════════════════════════
+
+def leer_hoja_completa(nombre: str) -> list[dict]:
+    """Lee TODOS los anuncios históricos de la hoja de una búsqueda desde Sheets."""
+    try:
+        sp  = conectar_sheets()
+        ws  = sp.worksheet(nombre[:50])
+        filas = ws.get_all_values()
+        if not filas or len(filas) < 2:
+            return []
+        hdrs = filas[0]
+        result = []
+        for row in filas[1:]:
+            if not any(row): continue
+            d = {hdrs[i]: (row[i] if i < len(row) else "") for i in range(len(hdrs))}
+            result.append({
+                "id":                d.get("ID",""),
+                "titulo":            d.get("Título",""),
+                "precio":            d.get("Precio (€)",""),
+                "precio_anterior":   d.get("Precio Anterior (€)",""),
+                "porcentaje_bajada": d.get("Bajada (%)",""),
+                "anio":              d.get("Año",""),
+                "km":                d.get("Km",""),
+                "combustible":       d.get("Combustible",""),
+                "ubicacion":         d.get("Ubicación",""),
+                "estado":            d.get("Estado",""),
+                "fecha_detectado":   d.get("Fecha Detectado",""),
+                "url":               d.get("URL",""),
+            })
+        log.info(f"[{nombre}] Histórico leído: {len(result)} anuncios de Sheets")
+        return result
+    except gspread.WorksheetNotFound:
+        log.warning(f"[{nombre}] Hoja no encontrada para histórico")
+        return []
+    except Exception as e:
+        log.error(f"Error leyendo histórico [{nombre}]: {e}", exc_info=True)
+        return []
+
+
+# ══════════════════════════════════════════════════════════════
+#  GENERACIÓN HTML DASHBOARD
+# ══════════════════════════════════════════════════════════════
+
+def _slug(nombre: str) -> str:
+    """'Mercedes GLC - España' → 'mercedes-glc-espana'"""
+    s = unicodedata.normalize("NFD", nombre.lower())
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+
+
+# ── Template HTML de página de búsqueda ───────────────────────
+_HTML_BUSQUEDA = (
+'''<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>__NOMBRE__ — AutoScout24 Monitor</title>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}\nnav{background:#1a1a1a;color:white;padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}\nnav a{color:#aaa;text-decoration:none;font-size:13px}\nnav a:hover{color:white}\nnav h1{font-size:15px;font-weight:600;flex:1;min-width:180px}\nnav .upd{font-size:12px;color:#666}\n.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:16px 24px;background:white;border-bottom:1px solid #ebebeb}\n.stat{background:#f9f9f7;border-radius:8px;padding:10px 12px}\n.slabel{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}\n.svalue{font-size:18px;font-weight:600}\n.sv-blue{color:#1e40af}.sv-red{color:#991b1b}\n.controls{padding:12px 24px;background:white;border-bottom:1px solid #ebebeb;display:flex;gap:8px;flex-wrap:wrap;align-items:center}\n.controls input,.controls select{border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:13px;font-family:inherit;background:white;color:#1a1a1a}\n.controls input:focus,.controls select:focus{outline:none;border-color:#1a1a1a}\n.controls input{min-width:200px}\n.sep{color:#ddd;font-size:12px}\n.count{padding:8px 24px 0;font-size:12px;color:#999}\n.tw{padding:12px 24px 24px;overflow-x:auto}\ntable{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.07)}\nthead{background:#1a1a1a;color:white}\nth{padding:10px 12px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap;cursor:pointer;user-select:none}\nth:hover{background:#2d2d2d}\nth.asc::after{content:" ↑"}th.desc::after{content:" ↓"}\ntd{padding:9px 12px;border-bottom:1px solid #f2f2f2;vertical-align:middle}\ntr:last-child td{border:none}\ntr:hover td{background:#fafaf8}\n.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:500;white-space:nowrap}\n.bn{background:#dbeafe;color:#1e3a8a}.bb{background:#fee2e2;color:#7f1d1d}.bc{background:#f3f4f6;color:#6b7280}\n.pm{font-weight:600}.pb{color:#1e40af}.pr{color:#991b1b}\n.po{font-size:11px;color:#bbb;text-decoration:line-through;display:block}\n.btn-ver{display:inline-block;padding:4px 10px;border:1px solid #ddd;border-radius:5px;font-size:11px;color:#555;text-decoration:none;white-space:nowrap}\n.btn-ver:hover{border-color:#999;color:#1a1a1a}\n.pag{padding:12px 24px;display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap}\n.pag button{padding:5px 11px;border:1px solid #ddd;border-radius:5px;background:white;cursor:pointer;font-size:13px;font-family:inherit}\n.pag button:hover{border-color:#999}\n.pag button.on{background:#1a1a1a;color:white;border-color:#1a1a1a}\n.pinfo{font-size:12px;color:#999;margin:0 6px}\n.empty{text-align:center;padding:40px;color:#999;font-size:13px}\n</style>\n</head>\n<body>\n<nav>\n  <a href="../index.html">&#8592; Inicio</a>\n  <h1>__NOMBRE__</h1>\n  <span class="upd">Actualizado: __FECHA__</span>\n</nav>\n<div class="stats" id="stats"></div>\n<div class="controls">\n  <input type="text" id="q" placeholder="Buscar título, ciudad...">\n  <select id="fe">\n    <option value="">Todos los estados</option>\n    <option value="NUEVO">Nuevos (hoy)</option>\n    <option value="BAJADA">Bajadas (hoy)</option>\n    <option value="conocido">Conocidos</option>\n  </select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:#999">Año desde</label>\n  <select id="faf"><option value="">—</option></select>\n  <label style="font-size:12px;color:#999">hasta</label>\n  <select id="fat"><option value="">—</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:#999">Precio máx</label>\n  <select id="fpm"><option value="">—</option></select>\n</div>\n<div class="count" id="cnt"></div>\n<div class="tw">\n<table>\n<thead><tr>\n  <th data-c="estado">Estado</th>\n  <th data-c="titulo">Título</th>\n  <th data-c="precio">Precio</th>\n  <th data-c="anio">Año</th>\n  <th data-c="kmn">Km</th>\n  <th>Combustible</th>\n  <th>Ubicación</th>\n  <th data-c="fecha_detectado">Detectado</th>\n  <th></th>\n</tr></thead>\n<tbody id="tb"></tbody>\n</table>\n<p class="empty" id="emp" style="display:none">Sin resultados.</p>\n</div>\n<div class="pag" id="pag"></div>\n<script>\nconst RAW=__DATA__;\nconst PG=50;\nlet sC="precio",sD="asc",pg=0;\nfunction kmn(s){return s?parseInt(s.replace(/\\./g,"").replace(/[^\\d]/g,""))||0:0}\nfunction fp(n){n=parseInt(n)||0;return n?n.toLocaleString("es-ES")+" €":"—"}\nconst ROWS=RAW.map(r=>({...r,precio:parseInt(r.precio)||0,precio_anterior:parseInt(r.precio_anterior)||0,kmn:kmn(r.km)}));\n(function init(){\n  const anios=[...new Set(ROWS.map(r=>r.anio).filter(Boolean))].sort();\n  ["faf","fat"].forEach(id=>{const s=document.getElementById(id);anios.forEach(a=>s.add(new Option(a,a)))});\n  const mx=Math.max(...ROWS.map(r=>r.precio),0);\n  const pm=document.getElementById("fpm");\n  [20000,25000,30000,35000,40000,45000,50000,60000,75000,100000].filter(p=>p<=mx+10000).forEach(p=>pm.add(new Option(p.toLocaleString("es-ES")+" €",p)));\n  document.querySelectorAll("th[data-c]").forEach(th=>th.addEventListener("click",()=>{const c=th.dataset.c;if(sC===c)sD=sD==="asc"?"desc":"asc";else{sC=c;sD="asc";}pg=0;render();}));\n  ["q","fe","faf","fat","fpm"].forEach(id=>{const el=document.getElementById(id);el.addEventListener(el.tagName==="INPUT"?"input":"change",()=>{pg=0;render();});});\n  const pr=ROWS.map(r=>r.precio).filter(Boolean);\n  const kms=ROWS.map(r=>r.kmn).filter(Boolean);\n  const nh=ROWS.filter(r=>(r.estado||"").includes("NUEVO")).length;\n  const bh=ROWS.filter(r=>(r.estado||"").includes("BAJADA")).length;\n  const fs=[...new Set(ROWS.map(r=>r.fecha_detectado).filter(Boolean))].sort();\n  const med=pr.length?Math.round(pr.reduce((a,b)=>a+b,0)/pr.length):0;\n  const km=kms.length?Math.round(kms.reduce((a,b)=>a+b,0)/kms.length):0;\n  document.getElementById("stats").innerHTML=[["Total",ROWS.length,""],["Precio mín",fp(Math.min(...pr)),""],["Precio medio",fp(med),""],["Precio máx",fp(Math.max(...pr)),""],["Km medio",km?km.toLocaleString("es-ES")+" km":"—",""],["Nuevos hoy",nh,"sv-blue"],["Bajadas hoy",bh,"sv-red"],["Desde",fs[0]||"—",""]].map(([l,v,c])=>`<div class="stat"><div class="slabel">${l}</div><div class="svalue ${c}">${v}</div></div>`).join("");\n  render();\n})();\nfunction filt(){\n  const q=document.getElementById("q").value.toLowerCase();\n  const fe=document.getElementById("fe").value;\n  const af=document.getElementById("faf").value;\n  const at=document.getElementById("fat").value;\n  const pm=parseInt(document.getElementById("fpm").value)||0;\n  return ROWS.filter(r=>{\n    if(q&&!(r.titulo||"").toLowerCase().includes(q)&&!(r.ubicacion||"").toLowerCase().includes(q))return false;\n    if(fe==="NUEVO"&&!(r.estado||"").includes("NUEVO"))return false;\n    if(fe==="BAJADA"&&!(r.estado||"").includes("BAJADA"))return false;\n    if(fe==="conocido"&&((r.estado||"").includes("NUEVO")||(r.estado||"").includes("BAJADA")))return false;\n    if(af&&(r.anio||"")<af)return false;\n    if(at&&(r.anio||"")>at)return false;\n    if(pm&&r.precio>pm)return false;\n    return true;\n  });\n}\nfunction render(){\n  const rows=filt();\n  rows.sort((a,b)=>{\n    let av=a[sC],bv=b[sC];\n    if(["precio","kmn","precio_anterior"].includes(sC)){av=av||0;bv=bv||0;}\n    else if(sC==="anio"){av=parseInt(av)||0;bv=parseInt(bv)||0;}\n    else{av=(av||"").toLowerCase();bv=(bv||"").toLowerCase();}\n    return sD==="asc"?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);\n  });\n  document.querySelectorAll("th[data-c]").forEach(th=>{th.className=th.dataset.c===sC?sD:"";});\n  const tot=rows.length,pages=Math.max(1,Math.ceil(tot/PG));\n  pg=Math.min(pg,pages-1);\n  const sl=rows.slice(pg*PG,(pg+1)*PG);\n  document.getElementById("cnt").textContent=`Mostrando ${sl.length} de ${tot} anuncios (${ROWS.length} total)`;\n  document.getElementById("tb").innerHTML=sl.map(r=>{\n    const n=(r.estado||"").includes("NUEVO"),b=(r.estado||"").includes("BAJADA");\n    const bc=n?"bn":b?"bb":"bc";\n    const bt=n?"Nuevo hoy":b?`Bajada ${r.porcentaje_bajada||""}%`:"Conocido";\n    const pc=n?`<span class="pm pb">${fp(r.precio)}</span>`:b&&r.precio_anterior?`<span class="po">${fp(r.precio_anterior)}</span><span class="pm pr">${fp(r.precio)}</span>`:`<span class="pm">${fp(r.precio)}</span>`;\n    const lk=r.url?`<a href="${r.url}" target="_blank" class="btn-ver">Ver &#8594;</a>`:"—";\n    return `<tr><td><span class="badge ${bc}">${bt}</span></td><td style="max-width:220px">${r.titulo||"—"}</td><td style="white-space:nowrap">${pc}</td><td>${r.anio||"—"}</td><td style="white-space:nowrap">${r.km||"—"}</td><td style="font-size:12px;color:#888">${r.combustible||"—"}</td><td style="font-size:12px;color:#888">${r.ubicacion||"—"}</td><td style="font-size:12px;color:#999">${r.fecha_detectado||"—"}</td><td>${lk}</td></tr>`;\n  }).join("");\n  document.getElementById("emp").style.display=tot?"none":"block";\n  const pag=document.getElementById("pag");\n  if(pages<=1){pag.innerHTML="";return;}\n  let h=`<span class="pinfo">${tot} resultados</span>`;\n  const fr=Math.max(0,pg-2),to=Math.min(pages-1,pg+2);\n  if(fr>0)h+=`<button onclick="pg=0;render()">1</button>${fr>1?'<span class="pinfo">…</span>':''}`;\n  for(let i=fr;i<=to;i++)h+=`<button class="${i===pg?"on":""}" onclick="pg=${i};render()">${i+1}</button>`;\n  if(to<pages-1)h+=`${to<pages-2?'<span class="pinfo">…</span>':''}`;\n  pag.innerHTML=h;\n}\n</script>\n</body>\n</html>'''
+)
+
+_HTML_INDEX = (
+'''<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>AutoScout24 Monitor</title>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}\nheader{background:#1a1a1a;color:white;padding:20px 24px}\nheader h1{font-size:18px;font-weight:600}\nheader p{font-size:13px;color:#888;margin-top:4px}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}\na.card{background:white;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #ebebeb;text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}\na.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}\n.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:#1a1a1a}\n.cs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}\n.c{background:#f9f9f7;border-radius:7px;padding:8px 10px}\n.cl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}\n.cv{font-size:17px;font-weight:600}\n.cvb{color:#1e40af}.cvr{color:#991b1b}\n.cf{font-size:11px;color:#bbb;border-top:1px solid #f2f2f2;padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}\n.cf span{color:#1a1a1a;font-weight:500;font-size:12px}\n</style>\n</head>\n<body>\n<header><h1>AutoScout24 Monitor</h1><p>Actualizado: __FECHA__</p></header>\n<div class="grid">__CARDS__</div>\n</body>\n</html>'''
+)
+
+
+def generar_html_busqueda(nombre: str, filas: list[dict], nuevos: list, bajadas: list, fecha: str) -> str:
+    """Genera el HTML completo de una página de búsqueda con datos históricos de Sheets."""
+    json_data = json.dumps(filas, ensure_ascii=False)
+    html = _HTML_BUSQUEDA
+    html = html.replace("__NOMBRE__", nombre)
+    html = html.replace("__FECHA__", fecha)
+    html = html.replace("__DATA__", json_data)
+    return html
+
+
+def generar_index_html(busquedas_info: list[dict]) -> str:
+    """Genera el index.html con cards para cada búsqueda."""
+    hoy = date.today().strftime("%d/%m/%Y")
+    cards = ""
+    for b in busquedas_info:
+        cards += f"""<a class="card" href="busquedas/{b['slug']}.html">
+  <h2>{b['nombre']}</h2>
+  <div class="cs">
+    <div class="c"><div class="cl">Total</div><div class="cv">{b['total']}</div></div>
+    <div class="c"><div class="cl">Nuevos hoy</div><div class="cv cvb">{b['nuevos']}</div></div>
+    <div class="c"><div class="cl">Bajadas hoy</div><div class="cv cvr">{b['bajadas']}</div></div>
+    <div class="c"><div class="cl">Precio mín</div><div class="cv" style="font-size:14px">{b['min_precio']}</div></div>
+    <div class="c"><div class="cl">Precio med</div><div class="cv" style="font-size:14px">{b['med_precio']}</div></div>
+    <div class="c"><div class="cl">Última act.</div><div class="cv" style="font-size:13px">{b['fecha']}</div></div>
+  </div>
+  <div class="cf"><span>Ver detalle →</span><span style="color:#aaa;font-size:11px">{b['total']} anuncios históricos</span></div>
+</a>"""
+    html = _HTML_INDEX
+    html = html.replace("__FECHA__", hoy)
+    html = html.replace("__CARDS__", cards)
+    return html
+
+
+# ══════════════════════════════════════════════════════════════
+#  PUBLICACIÓN GITHUB PAGES
+# ══════════════════════════════════════════════════════════════
+
+def publicar_github_pages(paginas: dict) -> str | None:
+    """
+    Publica los archivos HTML en la rama gh-pages via GitHub API.
+    Requiere GITHUB_TOKEN y GITHUB_REPOSITORY en el entorno.
+    URL resultante: https://{owner}.github.io/{repo}/
+    """
+    token = os.environ.get("GITHUB_TOKEN", "")
+    repo  = os.environ.get("GITHUB_REPOSITORY", "")  # "owner/repo"
+
+    if not token or not repo:
+        log.warning("Sin GITHUB_TOKEN o GITHUB_REPOSITORY — GitHub Pages omitido")
+        return None
+
+    hdrs = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    base = f"https://api.github.com/repos/{repo}"
+
+    # Asegurar que la rama gh-pages existe
+    r = requests.get(f"{base}/branches/gh-pages", headers=hdrs, timeout=15)
+    if r.status_code == 404:
+        log.info("Creando rama gh-pages...")
+        r2 = requests.get(f"{base}", headers=hdrs, timeout=15)
+        default = r2.json().get("default_branch", "main")
+        r3 = requests.get(f"{base}/git/ref/heads/{default}", headers=hdrs, timeout=15)
+        if r3.status_code == 200:
+            sha = r3.json()["object"]["sha"]
+            requests.post(
+                f"{base}/git/refs", headers=hdrs,
+                json={"ref": "refs/heads/gh-pages", "sha": sha}, timeout=15
+            )
+        else:
+            log.error("No se pudo crear gh-pages — sin SHA del branch por defecto")
+            return None
+
+    # Publicar cada archivo
+    ok = 0
+    for path, content in paginas.items():
+        encoded = base64.b64encode(content.encode("utf-8")).decode()
+        url = f"{base}/contents/{path}"
+
+        # SHA del archivo si ya existe (necesario para actualizarlo)
+        r = requests.get(url, headers=hdrs, params={"ref": "gh-pages"}, timeout=15)
+        sha_file = r.json().get("sha") if r.status_code == 200 else None
+
+        payload: dict = {
+            "message": f"[dashboard] Actualizar {path} [skip ci]",
+            "content": encoded,
+            "branch": "gh-pages",
+        }
+        if sha_file:
+            payload["sha"] = sha_file
+
+        r = requests.put(url, headers=hdrs, json=payload, timeout=30)
+        if r.status_code in (200, 201):
+            ok += 1
+            log.debug(f"GitHub Pages: {path} publicado")
+        else:
+            log.error(f"GitHub Pages error en {path}: {r.status_code} {r.text[:120]}")
+
+    log.info(f"GitHub Pages: {ok}/{len(paginas)} archivos publicados")
+    owner, rname = repo.split("/", 1)
+    url_pages = f"https://{owner}.github.io/{rname}/"
+    log.info(f"Dashboard URL: {url_pages}")
+    return url_pages
+
+
 # ══════════════════════════════════════════════════════════════
 #  MAIN
 # ══════════════════════════════════════════════════════════════
 
 def main():
-    inicio    = datetime.now()
-    sep       = "═" * 60
+    inicio = datetime.now()
+    sep    = "═" * 60
     log.info(sep)
     log.info(f"AutoScout24 Agent — INICIO {inicio.strftime('%Y-%m-%d %H:%M:%S')}")
     log.info(sep)
@@ -1045,8 +1229,10 @@ def main():
 
     log.info(f"Búsquedas activas: {len(busquedas)}")
 
-    resultados  = []
-    url_sheets  = ""
+    resultados     = []
+    url_sheets     = ""
+    paginas_html   = {}   # {path: html_content} para GitHub Pages
+    busquedas_info = []   # metadata para index.html
 
     try:
         for i, b in enumerate(busquedas, 1):
@@ -1062,25 +1248,55 @@ def main():
             anuncios = scrape_busqueda(b)
             if not anuncios:
                 log.warning(f"[{nombre}] Sin anuncios — posible bloqueo temporal")
-                resultados.append({"nombre": nombre, "nuevos": [], "bajadas": []})
+                resultados.append({"nombre": nombre, "nuevos": [], "bajadas": [], "url_sheets": ""})
                 continue
 
             # 3. Detectar cambios
             nuevos, bajadas = detectar_cambios(anuncios, estado_anterior)
 
-            # 4. Google Sheets
+            # 4. Google Sheets (actualiza los datos)
             url_sheets = actualizar_sheets_busqueda(nombre, anuncios, nuevos, bajadas) or url_sheets
 
-            # 5. Guardar estado
+            # 5. Guardar estado compacto
             guardar_estado(nombre, anuncios)
+
+            # 6. Leer histórico completo de Sheets (para dashboard y CSV)
+            filas_hist = leer_hoja_completa(nombre)
+
+            # 7. Email independiente por búsqueda + adjuntos
+            adjuntar_hoja = b.get("adjuntar_hoja_calculo", False)
+            enviar_email_busqueda(
+                nombre, nuevos, bajadas, url_sheets,
+                filas_hist=filas_hist, adjuntar_hoja=adjuntar_hoja
+            )
+
+            # 8. Preparar datos para el dashboard HTML
+            slug = _slug(nombre)
+            paginas_html[f"busquedas/{slug}.html"] = generar_html_busqueda(
+                nombre, filas_hist, nuevos, bajadas, date.today().isoformat()
+            )
+            precios = [int(f["precio"]) for f in filas_hist if f.get("precio") and str(f["precio"]).isdigit()]
+            busquedas_info.append({
+                "nombre":     nombre,
+                "slug":       slug,
+                "total":      len(filas_hist),
+                "nuevos":     len(nuevos),
+                "bajadas":    len(bajadas),
+                "min_precio": f"{min(precios):,} €".replace(",", ".") if precios else "—",
+                "med_precio": f"{sum(precios)//len(precios):,} €".replace(",", ".") if precios else "—",
+                "fecha":      date.today().isoformat(),
+            })
 
             resultados.append({"nombre": nombre, "nuevos": nuevos, "bajadas": bajadas, "url_sheets": url_sheets})
 
-        # 6. Email independiente por cada búsqueda con cambios
-        log.info(sep)
-        log.info("Enviando emails por búsqueda")
-        for r in resultados:
-            enviar_email_busqueda(r["nombre"], r["nuevos"], r["bajadas"], r.get("url_sheets", url_sheets))
+        # 9. Generar index.html y publicar todo en GitHub Pages
+        if busquedas_info:
+            log.info(sep)
+            log.info("Generando y publicando dashboard en GitHub Pages...")
+            paginas_html["index.html"] = generar_index_html(busquedas_info)
+            url_pages = publicar_github_pages(paginas_html)
+            if url_pages:
+                log.info(f"Dashboard disponible en: {url_pages}")
 
     except Exception as e:
         log.critical(f"Error crítico: {e}", exc_info=True)
@@ -1095,3 +1311,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
