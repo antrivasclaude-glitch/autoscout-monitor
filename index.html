@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AutoScout24 Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
+header{background:#1a1a1a;color:white;padding:20px 24px}
+header h1{font-size:18px;font-weight:600}
+header p{font-size:13px;color:#888;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}
+a.card{background:white;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #ebebeb;text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}
+a.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}
+.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:#1a1a1a}
+.cs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.c{background:#f9f9f7;border-radius:7px;padding:8px 10px}
+.cl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.cv{font-size:17px;font-weight:600}
+.cvb{color:#1e40af}.cvr{color:#991b1b}
+.cf{font-size:11px;color:#bbb;border-top:1px solid #f2f2f2;padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}
+.cf span{color:#1a1a1a;font-weight:500;font-size:12px}
+</style>
+</head>
+<body>
+<header><h1>AutoScout24 Monitor</h1><p>Actualizado: 21/05/2026</p></header>
+<div class="grid"><a class="card" href="busquedas/mercedes-glc-espana.html">
+  <h2>Mercedes GLC - España</h2>
+  <div class="cs">
+    <div class="c"><div class="cl">Total</div><div class="cv">161</div></div>
+    <div class="c"><div class="cl">Nuevos hoy</div><div class="cv cvb">0</div></div>
+    <div class="c"><div class="cl">Bajadas hoy</div><div class="cv cvr">0</div></div>
+    <div class="c"><div class="cl">Precio mín</div><div class="cv" style="font-size:14px">23.290 €</div></div>
+    <div class="c"><div class="cl">Precio med</div><div class="cv" style="font-size:14px">29.944 €</div></div>
+    <div class="c"><div class="cl">Última act.</div><div class="cv" style="font-size:13px">2026-05-21</div></div>
+  </div>
+  <div class="cf"><span>Ver detalle →</span><span style="color:#aaa;font-size:11px">161 anuncios históricos</span></div>
+</a><a class="card" href="busquedas/mercedes-glc-alemania.html">
+  <h2>Mercedes GLC - Alemania</h2>
+  <div class="cs">
+    <div class="c"><div class="cl">Total</div><div class="cv">138</div></div>
+    <div class="c"><div class="cl">Nuevos hoy</div><div class="cv cvb">16</div></div>
+    <div class="c"><div class="cl">Bajadas hoy</div><div class="cv cvr">0</div></div>
+    <div class="c"><div class="cl">Precio mín</div><div class="cv" style="font-size:14px">24.960 €</div></div>
+    <div class="c"><div class="cl">Precio med</div><div class="cv" style="font-size:14px">30.500 €</div></div>
+    <div class="c"><div class="cl">Última act.</div><div class="cv" style="font-size:13px">2026-05-21</div></div>
+  </div>
+  <div class="cf"><span>Ver detalle →</span><span style="color:#aaa;font-size:11px">138 anuncios históricos</span></div>
+</a></div>
+</body>
+</html>
