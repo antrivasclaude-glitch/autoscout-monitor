@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editar configuración — AutoScout24 Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
+header{background:#1e2433;border-bottom:1px solid #2d3748;padding:16px 24px;display:flex;align-items:center;gap:16px}
+header h1{font-size:16px;font-weight:600}
+header p{font-size:12px;color:#64748b;margin-top:2px}
+.warn{background:#451a03;border:1px solid #92400e;border-radius:8px;padding:10px 14px;margin:16px 24px;font-size:12px;color:#fbbf24;display:flex;gap:8px;align-items:flex-start}
+.main{padding:16px 24px;display:grid;grid-template-columns:1fr 320px;gap:16px;max-width:1400px}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+.editor-wrap{background:#1e2433;border-radius:10px;border:1px solid #2d3748;overflow:hidden}
+.editor-toolbar{padding:10px 14px;border-bottom:1px solid #2d3748;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.editor-toolbar span{font-size:12px;color:#64748b;flex:1}
+button{padding:6px 14px;border-radius:6px;border:1px solid #2d3748;background:#161b27;color:#94a3b8;font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s}
+button:hover{border-color:#4b5563;color:#e2e8f0}
+button.primary{background:#1d4ed8;border-color:#1d4ed8;color:white}
+button.primary:hover{background:#1e40af}
+button.danger{background:#7f1d1d;border-color:#7f1d1d;color:#fca5a5}
+button.danger:hover{background:#991b1b}
+button.success{background:#14532d;border-color:#14532d;color:#86efac}
+button.success:hover{background:#166534}
+textarea{width:100%;min-height:520px;background:#0d1117;color:#e2e8f0;border:none;padding:16px;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.6;resize:vertical;outline:none;tab-size:2}
+.panel{display:flex;flex-direction:column;gap:12px}
+.card{background:#1e2433;border-radius:10px;border:1px solid #2d3748;padding:16px}
+.card h3{font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.status{padding:10px 12px;border-radius:6px;font-size:12px;font-family:'IBM Plex Mono',monospace;min-height:44px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+.status.ok{background:#052e16;color:#86efac;border:1px solid #14532d}
+.status.err{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d}
+.status.idle{background:#161b27;color:#475569;border:1px solid #2d3748}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;color:#64748b;margin-bottom:4px}
+.field input,.field select{width:100%;padding:7px 10px;background:#0d1117;border:1px solid #2d3748;border-radius:6px;color:#e2e8f0;font-size:13px;font-family:inherit}
+.field input:focus,.field select:focus{outline:none;border-color:#3b82f6}
+.busqueda-item{padding:10px 12px;background:#161b27;border-radius:6px;border:1px solid #2d3748;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.busqueda-item:hover{border-color:#3b82f6}
+.busqueda-item .bi-name{font-size:13px;font-weight:500}
+.busqueda-item .bi-meta{font-size:11px;color:#64748b;margin-top:3px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot-on{background:#22c55e}.dot-off{background:#475569}
+hr{border:none;border-top:1px solid #2d3748;margin:8px 0}
+.token-note{font-size:11px;color:#475569;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>⚙️ Editar configuración</h1>
+    <p>AutoScout24 Monitor — config.json</p>
+  </div>
+</header>
+<div class="warn">
+  ⚠️ <span>Esta página no está enlazada desde ningún otro lugar del dashboard. Solo es accesible conociendo su URL directa. Los cambios se guardan directamente en el repositorio de GitHub vía API.</span>
+</div>
+<div class="main">
+  <div class="editor-wrap">
+    <div class="editor-toolbar">
+      <span id="lbl-editor">Cargando config.json...</span>
+      <button onclick="formatear()">Formatear JSON</button>
+      <button onclick="validar()">✓ Validar</button>
+      <button class="success" onclick="guardar()">💾 Guardar en GitHub</button>
+    </div>
+    <textarea id="editor" spellcheck="false" oninput="onEdit()"></textarea>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <h3>Estado validación</h3>
+      <div class="status idle" id="status-val">Pendiente de validar</div>
+    </div>
+
+    <div class="card">
+      <h3>Guardar en GitHub</h3>
+      <div class="field">
+        <label>GitHub Token (PAT con permiso contents:write)</label>
+        <input type="password" id="gh-token" placeholder="ghp_..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Repositorio (owner/repo)</label>
+        <input type="text" id="gh-repo" placeholder="antrivasclaude-glitch/autoscout-monitor">
+      </div>
+      <div class="field">
+        <label>Branch</label>
+        <select id="gh-branch">
+          <option value="main">main</option>
+          <option value="master">master</option>
+        </select>
+      </div>
+      <button class="primary" style="width:100%" onclick="guardar()">💾 Guardar config.json</button>
+      <div class="status idle" id="status-save" style="margin-top:10px">Sin cambios guardados</div>
+      <p class="token-note">El token se usa solo en esta sesión del navegador y no se almacena en ningún servidor.</p>
+    </div>
+
+    <div class="card">
+      <h3>Búsquedas detectadas</h3>
+      <div id="busquedas-list"><p style="font-size:12px;color:#475569">Carga el JSON para ver el resumen</p></div>
+    </div>
+
+    <div class="card">
+      <h3>Referencia de campos</h3>
+      <div style="font-size:11px;color:#64748b;line-height:1.8">
+        <b style="color:#93c5fd">activa</b>: true / false<br>
+        <b style="color:#93c5fd">fuel</b>: "D" diésel · "B" gasolina · "E" eléctrico · null todos<br>
+        <b style="color:#93c5fd">pais</b>: es · de · fr · it · nl · be · at · lu<br>
+        <b style="color:#93c5fd">precio_max</b>: número en € (null = sin límite)<br>
+        <b style="color:#93c5fd">km_max</b>: número en km (null = sin límite)<br>
+        <b style="color:#93c5fd">anio_min/max</b>: año con 4 dígitos (null = sin límite)<br>
+        <b style="color:#93c5fd">max_paginas</b>: 1–20 (20 anuncios por página)<br>
+        <b style="color:#93c5fd">adjuntar_hoja_calculo</b>: true / false
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REPO_DEFAULT = "antrivasclaude-glitch/autoscout-monitor";
+
+// ── Cargar config.json desde gh-pages o GitHub API ────────────────────────
+async function cargarConfig() {
+  const lbl = document.getElementById("lbl-editor");
+  // Intentar cargar el raw de main branch via GitHub API (sin auth, si es público)
+  const repo = document.getElementById("gh-repo").value || REPO_DEFAULT;
+  lbl.textContent = "Cargando config.json desde GitHub...";
+  try {
+    const url = `https://api.github.com/repos/${repo}/contents/config.json`;
+    const r = await fetch(url, {headers:{"Accept":"application/vnd.github+json"}});
+    if (r.ok) {
+      const data = await r.json();
+      const decoded = atob(data.content.replace(/
+/g,""));
+      document.getElementById("editor").value = JSON.stringify(JSON.parse(decoded), null, 2);
+      lbl.textContent = "config.json cargado desde GitHub ✓";
+      actualizarResumen();
+      return;
+    }
+  } catch(e) {}
+  lbl.textContent = "No se pudo cargar automáticamente — pega el JSON manualmente";
+}
+
+window.addEventListener("load", () => {
+  const saved = localStorage.getItem("as24-gh-repo");
+  if (saved) document.getElementById("gh-repo").value = saved;
+  const branch = localStorage.getItem("as24-gh-branch");
+  if (branch) document.getElementById("gh-branch").value = branch;
+  cargarConfig();
+});
+
+document.getElementById("gh-repo").addEventListener("change", e => {
+  localStorage.setItem("as24-gh-repo", e.target.value);
+});
+document.getElementById("gh-branch").addEventListener("change", e => {
+  localStorage.setItem("as24-gh-branch", e.target.value);
+});
+
+function onEdit() {
+  document.getElementById("status-val").className = "status idle";
+  document.getElementById("status-val").textContent = "Modificado — valida antes de guardar";
+  actualizarResumen();
+}
+
+function formatear() {
+  try {
+    const v = JSON.parse(document.getElementById("editor").value);
+    document.getElementById("editor").value = JSON.stringify(v, null, 2);
+    validar();
+  } catch(e) {
+    setStatus("status-val", "err", "JSON inválido:
+" + e.message);
+  }
+}
+
+function validar() {
+  const txt = document.getElementById("editor").value.trim();
+  if (!txt) { setStatus("status-val","err","El editor está vacío"); return false; }
+  try {
+    const cfg = JSON.parse(txt);
+    const bs = cfg.busquedas;
+    if (!Array.isArray(bs)) { setStatus("status-val","err","Falta el array "busquedas""); return false; }
+    const errores = [];
+    bs.forEach((b,i) => {
+      if (!b.nombre) errores.push(`busquedas[${i}]: falta "nombre"`);
+      if (!b.marca)  errores.push(`busquedas[${i}]: falta "marca"`);
+      if (!b.modelo) errores.push(`busquedas[${i}]: falta "modelo"`);
+      if (b.max_paginas && (b.max_paginas < 1 || b.max_paginas > 20))
+        errores.push(`busquedas[${i}]: max_paginas debe estar entre 1 y 20`);
+    });
+    if (errores.length) { setStatus("status-val","err", errores.join("
+")); return false; }
+    setStatus("status-val","ok",`✓ JSON válido
+${bs.length} búsquedas · ${bs.filter(b=>b.activa).length} activas`);
+    return true;
+  } catch(e) {
+    setStatus("status-val","err","JSON inválido:
+" + e.message);
+    return false;
+  }
+}
+
+async function guardar() {
+  if (!validar()) return;
+  const token = document.getElementById("gh-token").value.trim();
+  const repo  = document.getElementById("gh-repo").value.trim() || REPO_DEFAULT;
+  const branch= document.getElementById("gh-branch").value;
+  if (!token) { setStatus("status-save","err","Introduce el GitHub Token (PAT)"); return; }
+
+  setStatus("status-save","idle","Guardando...");
+
+  try {
+    // Obtener SHA actual del archivo
+    const urlFile = `https://api.github.com/repos/${repo}/contents/config.json`;
+    const rGet = await fetch(urlFile, {
+      headers:{"Authorization":`Bearer ${token}`,"Accept":"application/vnd.github+json"}
+    });
+    let sha = null;
+    if (rGet.ok) { sha = (await rGet.json()).sha; }
+
+    const content = btoa(unescape(encodeURIComponent(document.getElementById("editor").value)));
+    const payload = {
+      message: "[config] Actualizar config.json via editor web",
+      content,
+      branch,
+    };
+    if (sha) payload.sha = sha;
+
+    const rPut = await fetch(urlFile, {
+      method: "PUT",
+      headers:{
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    if (rPut.ok) {
+      setStatus("status-save","ok",`✓ config.json guardado en ${repo} (${branch})
+${new Date().toLocaleString("es-ES")}`);
+    } else {
+      const err = await rPut.json();
+      setStatus("status-save","err","Error " + rPut.status + ":
+" + (err.message||JSON.stringify(err)));
+    }
+  } catch(e) {
+    setStatus("status-save","err","Error de red:
+" + e.message);
+  }
+}
+
+function setStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = "status " + type;
+  el.textContent = msg;
+}
+
+function actualizarResumen() {
+  try {
+    const cfg = JSON.parse(document.getElementById("editor").value);
+    const bs = cfg.busquedas || [];
+    document.getElementById("busquedas-list").innerHTML = bs.map(b => `
+      <div class="busqueda-item">
+        <div class="bi-name">
+          <span class="dot ${b.activa ? 'dot-on' : 'dot-off'}"></span>${b.nombre || '(sin nombre)'}
+        </div>
+        <div class="bi-meta">${b.marca||''} ${b.modelo||''} · ${b.pais||'es'} · ${b.fuel||'todos'} · hasta ${b.precio_max ? b.precio_max.toLocaleString('es-ES')+'€' : '—'}</div>
+      </div>`).join("") || '<p style="font-size:12px;color:#475569">Sin búsquedas</p>';
+  } catch(e) {}
+}
+</script>
+</body>
+</html>
