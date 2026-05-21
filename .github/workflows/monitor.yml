@@ -1,8 +1,8 @@
 name: AutoScout24 Monitor
 
 on:
-  schedule:
-    - cron: '0 5 * * *'   # Cada día 05:00 UTC = 07:00 España (verano)
+  # schedule:
+  #   - cron: '0 5 * * *'   # Cada día 05:00 UTC = 07:00 España (verano)
 
   # ─── WEBHOOK / DISPARO EXTERNO ───────────────────────────────────────────
   # Permite lanzar el workflow manualmente desde la UI de GitHub o
