@@ -45,13 +45,26 @@ CFG = cargar_config()
 # ══════════════════════════════════════════════════════════════
 
 NIVEL = getattr(logging, CFG["log"].get("nivel", "INFO").upper(), logging.INFO)
+
+# Buffer en memoria para capturar el log del día y publicarlo en gh-pages
+_log_lines: list[str] = []
+
+class _BufHandler(logging.Handler):
+    def emit(self, record):
+        _log_lines.append(self.format(record))
+
+_LOG_FMT = "%(asctime)s [%(levelname)-8s] %(funcName)-28s — %(message)s"
 logging.basicConfig(
     level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)-8s] %(funcName)-28s — %(message)s",
+    format=_LOG_FMT,
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler(sys.stdout)]
 )
 log = logging.getLogger("autoscout")
+_bh = _BufHandler()
+_bh.setFormatter(logging.Formatter(_LOG_FMT, datefmt="%Y-%m-%d %H:%M:%S"))
+_bh.setLevel(logging.DEBUG)
+log.addHandler(_bh)
 
 
 # ══════════════════════════════════════════════════════════════
@@ -957,9 +970,7 @@ def _tabla_anuncios_html(anuncios: list, tipo: str) -> str:
 
 def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: str, filas_hist: list = None, adjuntar_hoja: bool = False):
     """Envía un email por búsqueda con el cuerpo HTML + adjunto JSON de los datos."""
-    if not nuevos and not bajadas:
-        log.info(f"[{nombre}] Sin cambios — no se envía email")
-        return
+    # Siempre se envía, haya cambios o no
 
     hoy = date.today().strftime("%d/%m/%Y")
     em  = CFG["email"]
@@ -973,7 +984,14 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
         f'border-radius:4px;text-decoration:none;">📊 Ver hoja de cálculo</a></p>'
     ) if url_sheets else ""
 
-    tablas = _tabla_anuncios_html(nuevos, "nuevo") + _tabla_anuncios_html(bajadas, "bajada")
+    if n_nuevos == 0 and n_bajadas == 0:
+        tablas = '''<div style="margin:24px 0;padding:18px 20px;background:#f9f9f7;border-radius:8px;
+                         border-left:4px solid #d1d5db;text-align:center;">
+            <p style="color:#6b7280;font-size:14px;">✅ Sin novedades en esta búsqueda hoy.</p>
+            <p style="color:#9ca3af;font-size:12px;margin-top:6px;">No se han detectado anuncios nuevos ni bajadas de precio.</p>
+        </div>'''
+    else:
+        tablas = _tabla_anuncios_html(nuevos, "nuevo") + _tabla_anuncios_html(bajadas, "bajada")
 
     html = f"""
     <html><body style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;padding:20px;">
@@ -1004,9 +1022,11 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
 
     try:
         msg = MIMEMultipart("mixed")
-        msg["Subject"] = (
-            f"🚗 AutoScout24 [{nombre}] — {n_nuevos} nuevos, {n_bajadas} bajadas — {hoy}"
-        )
+        if n_nuevos == 0 and n_bajadas == 0:
+            asunto = f"🚗 AutoScout24 [{nombre}] — Sin novedades — {hoy}"
+        else:
+            asunto = f"🚗 AutoScout24 [{nombre}] — {n_nuevos} nuevos, {n_bajadas} bajadas — {hoy}"
+        msg["Subject"] = asunto
         msg["From"] = em["origen"]
         msg["To"]   = em["destino"]
         msg.attach(MIMEText(html, "html"))
@@ -1097,7 +1117,7 @@ def _slug(nombre: str) -> str:
 
 # ── Template HTML de página de búsqueda ───────────────────────
 _HTML_BUSQUEDA = (
-'''<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>__NOMBRE__ — AutoScout24 Monitor</title>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}\nnav{background:#1a1a1a;color:white;padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}\nnav a{color:#aaa;text-decoration:none;font-size:13px}\nnav a:hover{color:white}\nnav h1{font-size:15px;font-weight:600;flex:1;min-width:180px}\nnav .upd{font-size:12px;color:#666}\n.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:16px 24px;background:white;border-bottom:1px solid #ebebeb}\n.stat{background:#f9f9f7;border-radius:8px;padding:10px 12px}\n.slabel{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}\n.svalue{font-size:18px;font-weight:600}\n.sv-blue{color:#1e40af}.sv-red{color:#991b1b}\n.controls{padding:12px 24px;background:white;border-bottom:1px solid #ebebeb;display:flex;gap:8px;flex-wrap:wrap;align-items:center}\n.controls input,.controls select{border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:13px;font-family:inherit;background:white;color:#1a1a1a}\n.controls input:focus,.controls select:focus{outline:none;border-color:#1a1a1a}\n.controls input{min-width:200px}\n.sep{color:#ddd;font-size:12px}\n.count{padding:8px 24px 0;font-size:12px;color:#999}\n.tw{padding:12px 24px 24px;overflow-x:auto}\ntable{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.07)}\nthead{background:#1a1a1a;color:white}\nth{padding:10px 12px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap;cursor:pointer;user-select:none}\nth:hover{background:#2d2d2d}\nth.asc::after{content:" ↑"}th.desc::after{content:" ↓"}\ntd{padding:9px 12px;border-bottom:1px solid #f2f2f2;vertical-align:middle}\ntr:last-child td{border:none}\ntr:hover td{background:#fafaf8}\n.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:500;white-space:nowrap}\n.bn{background:#dbeafe;color:#1e3a8a}.bb{background:#fee2e2;color:#7f1d1d}.bc{background:#f3f4f6;color:#6b7280}\n.pm{font-weight:600}.pb{color:#1e40af}.pr{color:#991b1b}\n.po{font-size:11px;color:#bbb;text-decoration:line-through;display:block}\n.btn-ver{display:inline-block;padding:4px 10px;border:1px solid #ddd;border-radius:5px;font-size:11px;color:#555;text-decoration:none;white-space:nowrap}\n.btn-ver:hover{border-color:#999;color:#1a1a1a}\n.pag{padding:12px 24px;display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap}\n.pag button{padding:5px 11px;border:1px solid #ddd;border-radius:5px;background:white;cursor:pointer;font-size:13px;font-family:inherit}\n.pag button:hover{border-color:#999}\n.pag button.on{background:#1a1a1a;color:white;border-color:#1a1a1a}\n.pinfo{font-size:12px;color:#999;margin:0 6px}\n.empty{text-align:center;padding:40px;color:#999;font-size:13px}\n</style>\n</head>\n<body>\n<nav>\n  <a href="../index.html">&#8592; Inicio</a>\n  <h1>__NOMBRE__</h1>\n  <span class="upd">Actualizado: __FECHA__</span>\n</nav>\n<div class="stats" id="stats"></div>\n<div class="controls">\n  <input type="text" id="q" placeholder="Buscar título, ciudad...">\n  <select id="fe">\n    <option value="">Todos los estados</option>\n    <option value="NUEVO">Nuevos (hoy)</option>\n    <option value="BAJADA">Bajadas (hoy)</option>\n    <option value="conocido">Conocidos</option>\n  </select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:#999">Año desde</label>\n  <select id="faf"><option value="">—</option></select>\n  <label style="font-size:12px;color:#999">hasta</label>\n  <select id="fat"><option value="">—</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:#999">Precio máx</label>\n  <select id="fpm"><option value="">—</option></select>\n</div>\n<div class="count" id="cnt"></div>\n<div class="tw">\n<table>\n<thead><tr>\n  <th data-c="estado">Estado</th>\n  <th data-c="titulo">Título</th>\n  <th data-c="precio">Precio</th>\n  <th data-c="anio">Año</th>\n  <th data-c="kmn">Km</th>\n  <th>Combustible</th>\n  <th>Ubicación</th>\n  <th data-c="fecha_detectado">Detectado</th>\n  <th></th>\n</tr></thead>\n<tbody id="tb"></tbody>\n</table>\n<p class="empty" id="emp" style="display:none">Sin resultados.</p>\n</div>\n<div class="pag" id="pag"></div>\n<script>\nconst RAW=__DATA__;\nconst PG=50;\nlet sC="precio",sD="asc",pg=0;\nfunction kmn(s){return s?parseInt(s.replace(/\\./g,"").replace(/[^\\d]/g,""))||0:0}\nfunction fp(n){n=parseInt(n)||0;return n?n.toLocaleString("es-ES")+" €":"—"}\nconst ROWS=RAW.map(r=>({...r,precio:parseInt(r.precio)||0,precio_anterior:parseInt(r.precio_anterior)||0,kmn:kmn(r.km)}));\n(function init(){\n  const anios=[...new Set(ROWS.map(r=>r.anio).filter(Boolean))].sort();\n  ["faf","fat"].forEach(id=>{const s=document.getElementById(id);anios.forEach(a=>s.add(new Option(a,a)))});\n  const mx=Math.max(...ROWS.map(r=>r.precio),0);\n  const pm=document.getElementById("fpm");\n  [20000,25000,30000,35000,40000,45000,50000,60000,75000,100000].filter(p=>p<=mx+10000).forEach(p=>pm.add(new Option(p.toLocaleString("es-ES")+" €",p)));\n  document.querySelectorAll("th[data-c]").forEach(th=>th.addEventListener("click",()=>{const c=th.dataset.c;if(sC===c)sD=sD==="asc"?"desc":"asc";else{sC=c;sD="asc";}pg=0;render();}));\n  ["q","fe","faf","fat","fpm"].forEach(id=>{const el=document.getElementById(id);el.addEventListener(el.tagName==="INPUT"?"input":"change",()=>{pg=0;render();});});\n  const pr=ROWS.map(r=>r.precio).filter(Boolean);\n  const kms=ROWS.map(r=>r.kmn).filter(Boolean);\n  const nh=ROWS.filter(r=>(r.estado||"").includes("NUEVO")).length;\n  const bh=ROWS.filter(r=>(r.estado||"").includes("BAJADA")).length;\n  const fs=[...new Set(ROWS.map(r=>r.fecha_detectado).filter(Boolean))].sort();\n  const med=pr.length?Math.round(pr.reduce((a,b)=>a+b,0)/pr.length):0;\n  const km=kms.length?Math.round(kms.reduce((a,b)=>a+b,0)/kms.length):0;\n  document.getElementById("stats").innerHTML=[["Total",ROWS.length,""],["Precio mín",fp(Math.min(...pr)),""],["Precio medio",fp(med),""],["Precio máx",fp(Math.max(...pr)),""],["Km medio",km?km.toLocaleString("es-ES")+" km":"—",""],["Nuevos hoy",nh,"sv-blue"],["Bajadas hoy",bh,"sv-red"],["Desde",fs[0]||"—",""]].map(([l,v,c])=>`<div class="stat"><div class="slabel">${l}</div><div class="svalue ${c}">${v}</div></div>`).join("");\n  render();\n})();\nfunction filt(){\n  const q=document.getElementById("q").value.toLowerCase();\n  const fe=document.getElementById("fe").value;\n  const af=document.getElementById("faf").value;\n  const at=document.getElementById("fat").value;\n  const pm=parseInt(document.getElementById("fpm").value)||0;\n  return ROWS.filter(r=>{\n    if(q&&!(r.titulo||"").toLowerCase().includes(q)&&!(r.ubicacion||"").toLowerCase().includes(q))return false;\n    if(fe==="NUEVO"&&!(r.estado||"").includes("NUEVO"))return false;\n    if(fe==="BAJADA"&&!(r.estado||"").includes("BAJADA"))return false;\n    if(fe==="conocido"&&((r.estado||"").includes("NUEVO")||(r.estado||"").includes("BAJADA")))return false;\n    if(af&&(r.anio||"")<af)return false;\n    if(at&&(r.anio||"")>at)return false;\n    if(pm&&r.precio>pm)return false;\n    return true;\n  });\n}\nfunction render(){\n  const rows=filt();\n  rows.sort((a,b)=>{\n    let av=a[sC],bv=b[sC];\n    if(["precio","kmn","precio_anterior"].includes(sC)){av=av||0;bv=bv||0;}\n    else if(sC==="anio"){av=parseInt(av)||0;bv=parseInt(bv)||0;}\n    else{av=(av||"").toLowerCase();bv=(bv||"").toLowerCase();}\n    return sD==="asc"?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);\n  });\n  document.querySelectorAll("th[data-c]").forEach(th=>{th.className=th.dataset.c===sC?sD:"";});\n  const tot=rows.length,pages=Math.max(1,Math.ceil(tot/PG));\n  pg=Math.min(pg,pages-1);\n  const sl=rows.slice(pg*PG,(pg+1)*PG);\n  document.getElementById("cnt").textContent=`Mostrando ${sl.length} de ${tot} anuncios (${ROWS.length} total)`;\n  document.getElementById("tb").innerHTML=sl.map(r=>{\n    const n=(r.estado||"").includes("NUEVO"),b=(r.estado||"").includes("BAJADA");\n    const bc=n?"bn":b?"bb":"bc";\n    const bt=n?"Nuevo hoy":b?`Bajada ${r.porcentaje_bajada||""}%`:"Conocido";\n    const pc=n?`<span class="pm pb">${fp(r.precio)}</span>`:b&&r.precio_anterior?`<span class="po">${fp(r.precio_anterior)}</span><span class="pm pr">${fp(r.precio)}</span>`:`<span class="pm">${fp(r.precio)}</span>`;\n    const lk=r.url?`<a href="${r.url}" target="_blank" class="btn-ver">Ver &#8594;</a>`:"—";\n    return `<tr><td><span class="badge ${bc}">${bt}</span></td><td style="max-width:220px">${r.titulo||"—"}</td><td style="white-space:nowrap">${pc}</td><td>${r.anio||"—"}</td><td style="white-space:nowrap">${r.km||"—"}</td><td style="font-size:12px;color:#888">${r.combustible||"—"}</td><td style="font-size:12px;color:#888">${r.ubicacion||"—"}</td><td style="font-size:12px;color:#999">${r.fecha_detectado||"—"}</td><td>${lk}</td></tr>`;\n  }).join("");\n  document.getElementById("emp").style.display=tot?"none":"block";\n  const pag=document.getElementById("pag");\n  if(pages<=1){pag.innerHTML="";return;}\n  let h=`<span class="pinfo">${tot} resultados</span>`;\n  const fr=Math.max(0,pg-2),to=Math.min(pages-1,pg+2);\n  if(fr>0)h+=`<button onclick="pg=0;render()">1</button>${fr>1?'<span class="pinfo">…</span>':''}`;\n  for(let i=fr;i<=to;i++)h+=`<button class="${i===pg?"on":""}" onclick="pg=${i};render()">${i+1}</button>`;\n  if(to<pages-1)h+=`${to<pages-2?'<span class="pinfo">…</span>':''}`;\n  pag.innerHTML=h;\n}\n</script>\n</body>\n</html>'''
+'<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>__NOMBRE__ — AutoScout24 Monitor</title>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:\'IBM Plex Sans\',system-ui,sans-serif;min-height:100vh;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}\n/* ── TEMAS ── */\nbody.tema-claro{--bg:#f5f5f0;--fg:#1a1a1a;--nav:#1a1a1a;--nav-fg:white;--card:white;--card-b:#ebebeb;--stat:#f9f9f7;--lbl:#aaa;--sep:#ddd;--th:#1a1a1a;--th-fg:white;--th-hov:#2d2d2d;--row-hov:#fafaf8;--td-b:#f2f2f2;--btn:#ddd;--btn-fg:#555;--inp-b:#ddd;--inp-fg:#1a1a1a;--cnt:#999;--badge-n-bg:#dbeafe;--badge-n-fg:#1e3a8a;--badge-b-bg:#fee2e2;--badge-b-fg:#7f1d1d;--badge-c-bg:#f3f4f6;--badge-c-fg:#6b7280;--pc-n:#1e40af;--pc-b:#991b1b;--pc-o:#bbb}\nbody.tema-oscuro{--bg:#0f1117;--fg:#e2e8f0;--nav:#1e2433;--nav-fg:#e2e8f0;--card:#1e2433;--card-b:#2d3748;--stat:#161b27;--lbl:#64748b;--sep:#2d3748;--th:#1e2433;--th-fg:#94a3b8;--th-hov:#2d3a52;--row-hov:#1a2236;--td-b:#2d3748;--btn:#2d3748;--btn-fg:#94a3b8;--inp-b:#2d3748;--inp-fg:#e2e8f0;--cnt:#64748b;--badge-n-bg:#1e3a5f;--badge-n-fg:#93c5fd;--badge-b-bg:#450a0a;--badge-b-fg:#fca5a5;--badge-c-bg:#1f2937;--badge-c-fg:#9ca3af;--pc-n:#60a5fa;--pc-b:#f87171;--pc-o:#475569}\nbody.tema-verde{--bg:#f0f7f0;--fg:#1a2e1a;--nav:#1a3a1a;--nav-fg:white;--card:white;--card-b:#c6e6c6;--stat:#edf7ed;--lbl:#6b8f6b;--sep:#c6e6c6;--th:#1a3a1a;--th-fg:white;--th-hov:#2d5a2d;--row-hov:#f5fbf5;--td-b:#e0f0e0;--btn:#c6e6c6;--btn-fg:#1a3a1a;--inp-b:#c6e6c6;--inp-fg:#1a2e1a;--cnt:#6b8f6b;--badge-n-bg:#dcfce7;--badge-n-fg:#14532d;--badge-b-bg:#fef9c3;--badge-b-fg:#713f12;--badge-c-bg:#f0fdf4;--badge-c-fg:#4b5563;--pc-n:#166534;--pc-b:#92400e;--pc-o:#9ca3af}\nnav{background:var(--nav);color:var(--nav-fg);padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}\nnav a{color:#aaa;text-decoration:none;font-size:13px}\nnav a:hover{color:var(--nav-fg)}\nnav h1{font-size:15px;font-weight:600;flex:1;min-width:180px}\n.upd{font-size:12px;color:#666}\n.tema-sel{margin-left:auto;display:flex;gap:6px;align-items:center}\n.tema-sel span{font-size:11px;color:#888}\n.tema-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border .15s}\n.tema-btn:hover,.tema-btn.on{border-color:var(--nav-fg)}\n.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:16px 24px;background:var(--card);border-bottom:1px solid var(--card-b)}\n.stat{background:var(--stat);border-radius:8px;padding:10px 12px}\n.slabel{font-size:10px;color:var(--lbl);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}\n.svalue{font-size:18px;font-weight:600}\n.sv-blue{color:var(--pc-n)}.sv-red{color:var(--pc-b)}\n.controls{padding:12px 24px;background:var(--card);border-bottom:1px solid var(--card-b);display:flex;gap:8px;flex-wrap:wrap;align-items:center}\n.controls input,.controls select{border:1px solid var(--inp-b);border-radius:6px;padding:6px 10px;font-size:13px;font-family:inherit;background:var(--card);color:var(--inp-fg)}\n.controls input:focus,.controls select:focus{outline:none;border-color:var(--fg)}\n.controls input{min-width:200px}\n.sep{color:var(--sep);font-size:12px}\n.count{padding:8px 24px 0;font-size:12px;color:var(--cnt)}\n.tw{padding:12px 24px 24px;overflow-x:auto}\ntable{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.07)}\nthead{background:var(--th);color:var(--th-fg)}\nth{padding:10px 12px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap;cursor:pointer;user-select:none}\nth:hover{background:var(--th-hov)}\nth.asc::after{content:" ↑"}th.desc::after{content:" ↓"}\ntd{padding:9px 12px;border-bottom:1px solid var(--td-b);vertical-align:middle}\ntr:last-child td{border:none}\ntr:hover td{background:var(--row-hov)}\n.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:500;white-space:nowrap}\n.bn{background:var(--badge-n-bg);color:var(--badge-n-fg)}\n.bb{background:var(--badge-b-bg);color:var(--badge-b-fg)}\n.bc{background:var(--badge-c-bg);color:var(--badge-c-fg)}\n.pm{font-weight:600}.pb{color:var(--pc-n)}.pr{color:var(--pc-b)}\n.po{font-size:11px;color:var(--pc-o);text-decoration:line-through;display:block}\n.btn-ver{display:inline-block;padding:4px 10px;border:1px solid var(--btn);border-radius:5px;font-size:11px;color:var(--btn-fg);text-decoration:none;white-space:nowrap}\n.btn-ver:hover{border-color:var(--fg);color:var(--fg)}\n.pag{padding:12px 24px;display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap}\n.pag button{padding:5px 11px;border:1px solid var(--btn);border-radius:5px;background:var(--card);cursor:pointer;font-size:13px;font-family:inherit;color:var(--fg)}\n.pag button:hover{border-color:var(--fg)}\n.pag button.on{background:var(--th);color:var(--th-fg);border-color:var(--th)}\n.pinfo{font-size:12px;color:var(--cnt);margin:0 6px}\n.empty{text-align:center;padding:40px;color:var(--cnt);font-size:13px}\n</style>\n</head>\n<body class="tema-claro">\n<nav>\n  <a href="../index.html">&#8592; Inicio</a>\n  <h1>__NOMBRE__</h1>\n  <span class="upd">Actualizado: __FECHA__</span>\n  <div class="tema-sel">\n    <span>Tema</span>\n    <div class="tema-btn on" id="tc" title="Claro" style="background:#f5f5f0" onclick="setTema(\'tema-claro\',this)"></div>\n    <div class="tema-btn" id="to" title="Oscuro" style="background:#0f1117" onclick="setTema(\'tema-oscuro\',this)"></div>\n    <div class="tema-btn" id="tv" title="Verde" style="background:#1a3a1a" onclick="setTema(\'tema-verde\',this)"></div>\n  </div>\n</nav>\n<div class="stats" id="stats"></div>\n<div class="controls">\n  <input type="text" id="q" placeholder="Buscar t\u00edtulo, ciudad...">\n  <select id="fe">\n    <option value="">Todos los estados</option>\n    <option value="NUEVO">Nuevos (hoy)</option>\n    <option value="BAJADA">Bajadas (hoy)</option>\n    <option value="conocido">Conocidos</option>\n  </select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">A\u00f1o desde</label>\n  <select id="faf"><option value="">\u2014</option></select>\n  <label style="font-size:12px;color:var(--lbl)">hasta</label>\n  <select id="fat"><option value="">\u2014</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">Precio m\u00e1x</label>\n  <select id="fpm"><option value="">\u2014</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">Km m\u00e1x</label>\n  <select id="fkm"><option value="">\u2014</option></select>\n</div>\n<div class="count" id="cnt"></div>\n<div class="tw">\n<table>\n<thead><tr>\n  <th data-c="estado">Estado</th>\n  <th data-c="titulo">T\u00edtulo</th>\n  <th data-c="precio">Precio</th>\n  <th data-c="anio">A\u00f1o</th>\n  <th data-c="kmn">Km</th>\n  <th>Combustible</th>\n  <th>Ubicaci\u00f3n</th>\n  <th data-c="fecha_detectado">Detectado</th>\n  <th></th>\n</tr></thead>\n<tbody id="tb"></tbody>\n</table>\n<p class="empty" id="emp" style="display:none">Sin resultados.</p>\n</div>\n<div class="pag" id="pag"></div>\n<script>\nconst RAW=__DATA__;\nconst PG=100;\nlet sC="precio",sD="asc",pg=0;\nfunction setTema(t,el){document.body.className=t;localStorage.setItem("as24-tema",t);document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}\n(function(){const t=localStorage.getItem("as24-tema")||"tema-claro";const map={"tema-claro":"tc","tema-oscuro":"to","tema-verde":"tv"};document.body.className=t;const el=document.getElementById(map[t]);if(el){document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}})();\nfunction kmn(s){return s?parseInt(s.replace(/\\./g,"").replace(/[^\\d]/g,""))||0:0}\nfunction fp(n){n=parseInt(n)||0;return n?n.toLocaleString("es-ES")+" \u20ac":"\u2014"}\nconst ROWS=RAW.map(r=>({...r,precio:parseInt(r.precio)||0,precio_anterior:parseInt(r.precio_anterior)||0,kmn:kmn(r.km)}));\n(function init(){\n  const anios=[...new Set(ROWS.map(r=>r.anio).filter(Boolean))].sort();\n  ["faf","fat"].forEach(id=>{const s=document.getElementById(id);anios.forEach(a=>s.add(new Option(a,a)))});\n  const mx=Math.max(...ROWS.map(r=>r.precio),0);\n  const pm=document.getElementById("fpm");\n  [20000,25000,30000,35000,40000,45000,50000,60000,75000,100000].filter(p=>p<=mx+10000).forEach(p=>pm.add(new Option(p.toLocaleString("es-ES")+" \u20ac",p)));\n  const mxkm=Math.max(...ROWS.map(r=>r.kmn),0);\n  const fkm=document.getElementById("fkm");\n  [50000,75000,100000,125000,150000,175000,200000].filter(k=>k<=mxkm+25000).forEach(k=>fkm.add(new Option(k.toLocaleString("es-ES")+" km",k)));\n  document.querySelectorAll("th[data-c]").forEach(th=>th.addEventListener("click",()=>{const c=th.dataset.c;if(sC===c)sD=sD==="asc"?"desc":"asc";else{sC=c;sD="asc";}pg=0;render();}));\n  ["q","fe","faf","fat","fpm","fkm"].forEach(id=>{const el=document.getElementById(id);el.addEventListener(el.tagName==="INPUT"?"input":"change",()=>{pg=0;render();});});\n  const pr=ROWS.map(r=>r.precio).filter(Boolean);\n  const kms=ROWS.map(r=>r.kmn).filter(Boolean);\n  const nh=ROWS.filter(r=>(r.estado||"").includes("NUEVO")).length;\n  const bh=ROWS.filter(r=>(r.estado||"").includes("BAJADA")).length;\n  const fs=[...new Set(ROWS.map(r=>r.fecha_detectado).filter(Boolean))].sort();\n  const med=pr.length?Math.round(pr.reduce((a,b)=>a+b,0)/pr.length):0;\n  const km=kms.length?Math.round(kms.reduce((a,b)=>a+b,0)/kms.length):0;\n  document.getElementById("stats").innerHTML=[["Total",ROWS.length,""],["Precio m\u00edn",fp(Math.min(...pr)),""],["Precio medio",fp(med),""],["Precio m\u00e1x",fp(Math.max(...pr)),""],["Km medio",km?km.toLocaleString("es-ES")+" km":"\u2014",""],["Nuevos hoy",nh,"sv-blue"],["Bajadas hoy",bh,"sv-red"],["Desde",fs[0]||"\u2014",""]].map(([l,v,c])=>`<div class="stat"><div class="slabel">${l}</div><div class="svalue ${c}">${v}</div></div>`).join("");\n  render();\n})();\nfunction filt(){\n  const q=document.getElementById("q").value.toLowerCase();\n  const fe=document.getElementById("fe").value;\n  const af=document.getElementById("faf").value;\n  const at=document.getElementById("fat").value;\n  const pm=parseInt(document.getElementById("fpm").value)||0;\n  const km=parseInt(document.getElementById("fkm").value)||0;\n  return ROWS.filter(r=>{\n    if(q&&!(r.titulo||"").toLowerCase().includes(q)&&!(r.ubicacion||"").toLowerCase().includes(q))return false;\n    if(fe==="NUEVO"&&!(r.estado||"").includes("NUEVO"))return false;\n    if(fe==="BAJADA"&&!(r.estado||"").includes("BAJADA"))return false;\n    if(fe==="conocido"&&((r.estado||"").includes("NUEVO")||(r.estado||"").includes("BAJADA")))return false;\n    if(af&&(r.anio||"")<af)return false;\n    if(at&&(r.anio||"")>at)return false;\n    if(pm&&r.precio>pm)return false;\n    if(km&&r.kmn>km)return false;\n    return true;\n  });\n}\nfunction render(){\n  const rows=filt();\n  rows.sort((a,b)=>{\n    let av=a[sC],bv=b[sC];\n    if(["precio","kmn","precio_anterior"].includes(sC)){av=av||0;bv=bv||0;}\n    else if(sC==="anio"){av=parseInt(av)||0;bv=parseInt(bv)||0;}\n    else{av=(av||"").toLowerCase();bv=(bv||"").toLowerCase();}\n    return sD==="asc"?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);\n  });\n  document.querySelectorAll("th[data-c]").forEach(th=>{th.className=th.dataset.c===sC?sD:"";});\n  const tot=rows.length,pages=Math.max(1,Math.ceil(tot/PG));\n  pg=Math.min(pg,pages-1);\n  const sl=rows.slice(pg*PG,(pg+1)*PG);\n  document.getElementById("cnt").textContent=`Mostrando ${sl.length} de ${tot} anuncios (${ROWS.length} total)`;\n  document.getElementById("tb").innerHTML=sl.map(r=>{\n    const n=(r.estado||"").includes("NUEVO"),b=(r.estado||"").includes("BAJADA");\n    const bc=n?"bn":b?"bb":"bc";\n    const bt=n?"Nuevo hoy":b?`Bajada ${r.porcentaje_bajada||""}%`:"Conocido";\n    const pc=n?`<span class="pm pb">${fp(r.precio)}</span>`:b&&r.precio_anterior?`<span class="po">${fp(r.precio_anterior)}</span><span class="pm pr">${fp(r.precio)}</span>`:`<span class="pm">${fp(r.precio)}</span>`;\n    const lk=r.url?`<a href="${r.url}" target="_blank" class="btn-ver">Ver &#8594;</a>`:"\u2014";\n    return `<tr><td><span class="badge ${bc}">${bt}</span></td><td style="max-width:220px">${r.titulo||"\u2014"}</td><td style="white-space:nowrap">${pc}</td><td>${r.anio||"\u2014"}</td><td style="white-space:nowrap">${r.km||"\u2014"}</td><td style="font-size:12px;color:var(--lbl)">${r.combustible||"\u2014"}</td><td style="font-size:12px;color:var(--lbl)">${r.ubicacion||"\u2014"}</td><td style="font-size:12px;color:var(--cnt)">${r.fecha_detectado||"\u2014"}</td><td>${lk}</td></tr>`;\n  }).join("");\n  document.getElementById("emp").style.display=tot?"none":"block";\n  const pag=document.getElementById("pag");\n  if(pages<=1){pag.innerHTML="";return;}\n  let h=`<span class="pinfo">${tot} resultados</span>`;\n  const fr=Math.max(0,pg-2),to=Math.min(pages-1,pg+2);\n  if(fr>0)h+=`<button onclick="pg=0;render()">1</button>${fr>1?\'<span class="pinfo">\u2026</span>\':\'\'}`;\n  for(let i=fr;i<=to;i++)h+=`<button class="${i===pg?"on":""}" onclick="pg=${i};render()">${i+1}</button>`;\n  if(to<pages-1)h+=`${to<pages-2?\'<span class="pinfo">\u2026</span>\':\'\'}`;\n  pag.innerHTML=h;\n}\n</script>\n</body>\n</html>'
 )
 
 _HTML_INDEX = (
@@ -1142,14 +1162,315 @@ def generar_index_html(busquedas_info: list[dict]) -> str:
 #  PUBLICACIÓN GITHUB PAGES
 # ══════════════════════════════════════════════════════════════
 
+
+def generar_editor_configuracion() -> str:
+    """Genera editar_configuracion.html — página de edición de config.json.
+    No enlazada desde ninguna otra página; solo accesible por URL directa."""
+    return '''<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editar configuración — AutoScout24 Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:\'IBM Plex Sans\',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
+header{background:#1e2433;border-bottom:1px solid #2d3748;padding:16px 24px;display:flex;align-items:center;gap:16px}
+header h1{font-size:16px;font-weight:600}
+header p{font-size:12px;color:#64748b;margin-top:2px}
+.warn{background:#451a03;border:1px solid #92400e;border-radius:8px;padding:10px 14px;margin:16px 24px;font-size:12px;color:#fbbf24;display:flex;gap:8px;align-items:flex-start}
+.main{padding:16px 24px;display:grid;grid-template-columns:1fr 320px;gap:16px;max-width:1400px}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+.editor-wrap{background:#1e2433;border-radius:10px;border:1px solid #2d3748;overflow:hidden}
+.editor-toolbar{padding:10px 14px;border-bottom:1px solid #2d3748;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.editor-toolbar span{font-size:12px;color:#64748b;flex:1}
+button{padding:6px 14px;border-radius:6px;border:1px solid #2d3748;background:#161b27;color:#94a3b8;font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s}
+button:hover{border-color:#4b5563;color:#e2e8f0}
+button.primary{background:#1d4ed8;border-color:#1d4ed8;color:white}
+button.primary:hover{background:#1e40af}
+button.danger{background:#7f1d1d;border-color:#7f1d1d;color:#fca5a5}
+button.danger:hover{background:#991b1b}
+button.success{background:#14532d;border-color:#14532d;color:#86efac}
+button.success:hover{background:#166534}
+textarea{width:100%;min-height:520px;background:#0d1117;color:#e2e8f0;border:none;padding:16px;font-family:\'IBM Plex Mono\',monospace;font-size:13px;line-height:1.6;resize:vertical;outline:none;tab-size:2}
+.panel{display:flex;flex-direction:column;gap:12px}
+.card{background:#1e2433;border-radius:10px;border:1px solid #2d3748;padding:16px}
+.card h3{font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.status{padding:10px 12px;border-radius:6px;font-size:12px;font-family:\'IBM Plex Mono\',monospace;min-height:44px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+.status.ok{background:#052e16;color:#86efac;border:1px solid #14532d}
+.status.err{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d}
+.status.idle{background:#161b27;color:#475569;border:1px solid #2d3748}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;color:#64748b;margin-bottom:4px}
+.field input,.field select{width:100%;padding:7px 10px;background:#0d1117;border:1px solid #2d3748;border-radius:6px;color:#e2e8f0;font-size:13px;font-family:inherit}
+.field input:focus,.field select:focus{outline:none;border-color:#3b82f6}
+.busqueda-item{padding:10px 12px;background:#161b27;border-radius:6px;border:1px solid #2d3748;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.busqueda-item:hover{border-color:#3b82f6}
+.busqueda-item .bi-name{font-size:13px;font-weight:500}
+.busqueda-item .bi-meta{font-size:11px;color:#64748b;margin-top:3px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot-on{background:#22c55e}.dot-off{background:#475569}
+hr{border:none;border-top:1px solid #2d3748;margin:8px 0}
+.token-note{font-size:11px;color:#475569;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>⚙️ Editar configuración</h1>
+    <p>AutoScout24 Monitor — config.json</p>
+  </div>
+</header>
+<div class="warn">
+  ⚠️ <span>Esta página no está enlazada desde ningún otro lugar del dashboard. Solo es accesible conociendo su URL directa. Los cambios se guardan directamente en el repositorio de GitHub vía API.</span>
+</div>
+<div class="main">
+  <div class="editor-wrap">
+    <div class="editor-toolbar">
+      <span id="lbl-editor">Cargando config.json...</span>
+      <button onclick="formatear()">Formatear JSON</button>
+      <button onclick="validar()">✓ Validar</button>
+      <button class="success" onclick="guardar()">💾 Guardar en GitHub</button>
+    </div>
+    <textarea id="editor" spellcheck="false" oninput="onEdit()"></textarea>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <h3>Estado validación</h3>
+      <div class="status idle" id="status-val">Pendiente de validar</div>
+    </div>
+
+    <div class="card">
+      <h3>Guardar en GitHub</h3>
+      <div class="field">
+        <label>GitHub Token (PAT con permiso contents:write)</label>
+        <input type="password" id="gh-token" placeholder="ghp_..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Repositorio (owner/repo)</label>
+        <input type="text" id="gh-repo" placeholder="antrivasclaude-glitch/autoscout-monitor">
+      </div>
+      <div class="field">
+        <label>Branch</label>
+        <select id="gh-branch">
+          <option value="main">main</option>
+          <option value="master">master</option>
+        </select>
+      </div>
+      <button class="primary" style="width:100%" onclick="guardar()">💾 Guardar config.json</button>
+      <div class="status idle" id="status-save" style="margin-top:10px">Sin cambios guardados</div>
+      <p class="token-note">El token se usa solo en esta sesión del navegador y no se almacena en ningún servidor.</p>
+    </div>
+
+    <div class="card">
+      <h3>Búsquedas detectadas</h3>
+      <div id="busquedas-list"><p style="font-size:12px;color:#475569">Carga el JSON para ver el resumen</p></div>
+    </div>
+
+    <div class="card">
+      <h3>Referencia de campos</h3>
+      <div style="font-size:11px;color:#64748b;line-height:1.8">
+        <b style="color:#93c5fd">activa</b>: true / false<br>
+        <b style="color:#93c5fd">fuel</b>: "D" diésel · "B" gasolina · "E" eléctrico · null todos<br>
+        <b style="color:#93c5fd">pais</b>: es · de · fr · it · nl · be · at · lu<br>
+        <b style="color:#93c5fd">precio_max</b>: número en € (null = sin límite)<br>
+        <b style="color:#93c5fd">km_max</b>: número en km (null = sin límite)<br>
+        <b style="color:#93c5fd">anio_min/max</b>: año con 4 dígitos (null = sin límite)<br>
+        <b style="color:#93c5fd">max_paginas</b>: 1–20 (20 anuncios por página)<br>
+        <b style="color:#93c5fd">adjuntar_hoja_calculo</b>: true / false
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REPO_DEFAULT = "antrivasclaude-glitch/autoscout-monitor";
+
+// ── Cargar config.json desde gh-pages o GitHub API ────────────────────────
+async function cargarConfig() {
+  const lbl = document.getElementById("lbl-editor");
+  // Intentar cargar el raw de main branch via GitHub API (sin auth, si es público)
+  const repo = document.getElementById("gh-repo").value || REPO_DEFAULT;
+  lbl.textContent = "Cargando config.json desde GitHub...";
+  try {
+    const url = `https://api.github.com/repos/${repo}/contents/config.json`;
+    const r = await fetch(url, {headers:{"Accept":"application/vnd.github+json"}});
+    if (r.ok) {
+      const data = await r.json();
+      const decoded = atob(data.content.replace(/\n/g,""));
+      document.getElementById("editor").value = JSON.stringify(JSON.parse(decoded), null, 2);
+      lbl.textContent = "config.json cargado desde GitHub ✓";
+      actualizarResumen();
+      return;
+    }
+  } catch(e) {}
+  lbl.textContent = "No se pudo cargar automáticamente — pega el JSON manualmente";
+}
+
+window.addEventListener("load", () => {
+  const saved = localStorage.getItem("as24-gh-repo");
+  if (saved) document.getElementById("gh-repo").value = saved;
+  const branch = localStorage.getItem("as24-gh-branch");
+  if (branch) document.getElementById("gh-branch").value = branch;
+  cargarConfig();
+});
+
+document.getElementById("gh-repo").addEventListener("change", e => {
+  localStorage.setItem("as24-gh-repo", e.target.value);
+});
+document.getElementById("gh-branch").addEventListener("change", e => {
+  localStorage.setItem("as24-gh-branch", e.target.value);
+});
+
+function onEdit() {
+  document.getElementById("status-val").className = "status idle";
+  document.getElementById("status-val").textContent = "Modificado — valida antes de guardar";
+  actualizarResumen();
+}
+
+function formatear() {
+  try {
+    const v = JSON.parse(document.getElementById("editor").value);
+    document.getElementById("editor").value = JSON.stringify(v, null, 2);
+    validar();
+  } catch(e) {
+    setStatus("status-val", "err", "JSON inválido:\n" + e.message);
+  }
+}
+
+function validar() {
+  const txt = document.getElementById("editor").value.trim();
+  if (!txt) { setStatus("status-val","err","El editor está vacío"); return false; }
+  try {
+    const cfg = JSON.parse(txt);
+    const bs = cfg.busquedas;
+    if (!Array.isArray(bs)) { setStatus("status-val","err","Falta el array \"busquedas\""); return false; }
+    const errores = [];
+    bs.forEach((b,i) => {
+      if (!b.nombre) errores.push(`busquedas[${i}]: falta "nombre"`);
+      if (!b.marca)  errores.push(`busquedas[${i}]: falta "marca"`);
+      if (!b.modelo) errores.push(`busquedas[${i}]: falta "modelo"`);
+      if (b.max_paginas && (b.max_paginas < 1 || b.max_paginas > 20))
+        errores.push(`busquedas[${i}]: max_paginas debe estar entre 1 y 20`);
+    });
+    if (errores.length) { setStatus("status-val","err", errores.join("\n")); return false; }
+    setStatus("status-val","ok",`✓ JSON válido\n${bs.length} búsquedas · ${bs.filter(b=>b.activa).length} activas`);
+    return true;
+  } catch(e) {
+    setStatus("status-val","err","JSON inválido:\n" + e.message);
+    return false;
+  }
+}
+
+async function guardar() {
+  if (!validar()) return;
+  const token = document.getElementById("gh-token").value.trim();
+  const repo  = document.getElementById("gh-repo").value.trim() || REPO_DEFAULT;
+  const branch= document.getElementById("gh-branch").value;
+  if (!token) { setStatus("status-save","err","Introduce el GitHub Token (PAT)"); return; }
+
+  setStatus("status-save","idle","Guardando...");
+
+  try {
+    // Obtener SHA actual del archivo
+    const urlFile = `https://api.github.com/repos/${repo}/contents/config.json`;
+    const rGet = await fetch(urlFile, {
+      headers:{"Authorization":`Bearer ${token}`,"Accept":"application/vnd.github+json"}
+    });
+    let sha = null;
+    if (rGet.ok) { sha = (await rGet.json()).sha; }
+
+    const content = btoa(unescape(encodeURIComponent(document.getElementById("editor").value)));
+    const payload = {
+      message: "[config] Actualizar config.json via editor web",
+      content,
+      branch,
+    };
+    if (sha) payload.sha = sha;
+
+    const rPut = await fetch(urlFile, {
+      method: "PUT",
+      headers:{
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+    if (rPut.ok) {
+      setStatus("status-save","ok",`✓ config.json guardado en ${repo} (${branch})\n${new Date().toLocaleString("es-ES")}`);
+    } else {
+      const err = await rPut.json();
+      setStatus("status-save","err","Error " + rPut.status + ":\n" + (err.message||JSON.stringify(err)));
+    }
+  } catch(e) {
+    setStatus("status-save","err","Error de red:\n" + e.message);
+  }
+}
+
+function setStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = "status " + type;
+  el.textContent = msg;
+}
+
+function actualizarResumen() {
+  try {
+    const cfg = JSON.parse(document.getElementById("editor").value);
+    const bs = cfg.busquedas || [];
+    document.getElementById("busquedas-list").innerHTML = bs.map(b => `
+      <div class="busqueda-item">
+        <div class="bi-name">
+          <span class="dot ${b.activa ? \'dot-on\' : \'dot-off\'}"></span>${b.nombre || \'(sin nombre)\'}
+        </div>
+        <div class="bi-meta">${b.marca||\'\'} ${b.modelo||\'\'} · ${b.pais||\'es\'} · ${b.fuel||\'todos\'} · hasta ${b.precio_max ? b.precio_max.toLocaleString(\'es-ES\')+\'€\' : \'—\'}</div>
+      </div>`).join("") || \'<p style="font-size:12px;color:#475569">Sin búsquedas</p>\';
+  } catch(e) {}
+}
+</script>
+</body>
+</html>'''
+
+
+def _gh_get_sha(base: str, path: str, hdrs: dict, ref: str = "gh-pages") -> str | None:
+    """Devuelve el SHA de un archivo en gh-pages o None si no existe."""
+    r = requests.get(f"{base}/contents/{path}", headers=hdrs,
+                     params={"ref": ref}, timeout=15)
+    return r.json().get("sha") if r.status_code == 200 else None
+
+
+def _gh_put(base: str, path: str, content_bytes: bytes, hdrs: dict,
+            message: str, sha: str | None = None) -> bool:
+    """Crea o actualiza un archivo en gh-pages. Devuelve True si OK."""
+    payload: dict = {
+        "message": message,
+        "content": base64.b64encode(content_bytes).decode(),
+        "branch": "gh-pages",
+    }
+    if sha:
+        payload["sha"] = sha
+    r = requests.put(f"{base}/contents/{path}", headers=hdrs,
+                     json=payload, timeout=30)
+    return r.status_code in (200, 201)
+
+
+def _gh_delete(base: str, path: str, sha: str, hdrs: dict) -> bool:
+    """Borra un archivo de gh-pages. Devuelve True si OK."""
+    r = requests.delete(f"{base}/contents/{path}", headers=hdrs,
+                        json={"message": f"[log] Borrar {path} (>7 días) [skip ci]",
+                              "sha": sha, "branch": "gh-pages"}, timeout=15)
+    return r.status_code == 200
+
+
 def publicar_github_pages(paginas: dict) -> str | None:
     """
-    Publica los archivos HTML en la rama gh-pages via GitHub API.
+    Publica archivos HTML + log diario en gh-pages y borra logs >7 días.
     Requiere GITHUB_TOKEN y GITHUB_REPOSITORY en el entorno.
-    URL resultante: https://{owner}.github.io/{repo}/
     """
     token = os.environ.get("GITHUB_TOKEN", "")
-    repo  = os.environ.get("GITHUB_REPOSITORY", "")  # "owner/repo"
+    repo  = os.environ.get("GITHUB_REPOSITORY", "")
 
     if not token or not repo:
         log.warning("Sin GITHUB_TOKEN o GITHUB_REPOSITORY — GitHub Pages omitido")
@@ -1171,40 +1492,60 @@ def publicar_github_pages(paginas: dict) -> str | None:
         r3 = requests.get(f"{base}/git/ref/heads/{default}", headers=hdrs, timeout=15)
         if r3.status_code == 200:
             sha = r3.json()["object"]["sha"]
-            requests.post(
-                f"{base}/git/refs", headers=hdrs,
-                json={"ref": "refs/heads/gh-pages", "sha": sha}, timeout=15
-            )
+            requests.post(f"{base}/git/refs", headers=hdrs,
+                          json={"ref": "refs/heads/gh-pages", "sha": sha}, timeout=15)
         else:
-            log.error("No se pudo crear gh-pages — sin SHA del branch por defecto")
+            log.error("No se pudo crear gh-pages")
             return None
 
-    # Publicar cada archivo
+    # ── Publicar archivos HTML ────────────────────────────────
     ok = 0
-    for path, content in paginas.items():
-        encoded = base64.b64encode(content.encode("utf-8")).decode()
-        url = f"{base}/contents/{path}"
-
-        # SHA del archivo si ya existe (necesario para actualizarlo)
-        r = requests.get(url, headers=hdrs, params={"ref": "gh-pages"}, timeout=15)
-        sha_file = r.json().get("sha") if r.status_code == 200 else None
-
-        payload: dict = {
-            "message": f"[dashboard] Actualizar {path} [skip ci]",
-            "content": encoded,
-            "branch": "gh-pages",
-        }
-        if sha_file:
-            payload["sha"] = sha_file
-
-        r = requests.put(url, headers=hdrs, json=payload, timeout=30)
-        if r.status_code in (200, 201):
+    for path, html_content in paginas.items():
+        sha_file = _gh_get_sha(base, path, hdrs)
+        if _gh_put(base, path, html_content.encode("utf-8"), hdrs,
+                   f"[dashboard] {path} [skip ci]", sha_file):
             ok += 1
-            log.debug(f"GitHub Pages: {path} publicado")
+            log.debug(f"gh-pages: {path} publicado")
         else:
-            log.error(f"GitHub Pages error en {path}: {r.status_code} {r.text[:120]}")
+            log.error(f"gh-pages error en {path}")
 
-    log.info(f"GitHub Pages: {ok}/{len(paginas)} archivos publicados")
+    log.info(f"GitHub Pages: {ok}/{len(paginas)} archivos HTML publicados")
+
+    # ── Log diario: publicar log_YYYY-MM-DD.txt ───────────────
+    hoy_str = date.today().isoformat()
+    log_path = f"log_{hoy_str}.txt"
+    log_content = "\n".join(_log_lines).encode("utf-8")
+    sha_log = _gh_get_sha(base, log_path, hdrs)
+    if _gh_put(base, log_path, log_content, hdrs,
+               f"[log] {log_path} [skip ci]", sha_log):
+        log.info(f"Log publicado: {log_path}")
+    else:
+        log.warning(f"No se pudo publicar el log {log_path}")
+
+    # ── Borrar logs de más de 7 días ──────────────────────────
+    from datetime import timedelta
+    limite = date.today() - timedelta(days=7)
+    try:
+        r = requests.get(f"{base}/git/trees/gh-pages", headers=hdrs,
+                         params={"recursive": "1"}, timeout=15)
+        if r.status_code == 200:
+            archivos = [f["path"] for f in r.json().get("tree", [])
+                        if f["path"].startswith("log_") and f["path"].endswith(".txt")]
+            for ap in archivos:
+                # log_YYYY-MM-DD.txt → extraer fecha
+                m = re.search(r"log_(\d{4}-\d{2}-\d{2})\.txt", ap)
+                if m:
+                    try:
+                        fecha_log = date.fromisoformat(m.group(1))
+                        if fecha_log < limite:
+                            sha_old = _gh_get_sha(base, ap, hdrs)
+                            if sha_old and _gh_delete(base, ap, sha_old, hdrs):
+                                log.info(f"Log antiguo borrado: {ap}")
+                    except ValueError:
+                        pass
+    except Exception as e:
+        log.warning(f"Error al limpiar logs antiguos: {e}")
+
     owner, rname = repo.split("/", 1)
     url_pages = f"https://{owner}.github.io/{rname}/"
     log.info(f"Dashboard URL: {url_pages}")
@@ -1289,14 +1630,17 @@ def main():
 
             resultados.append({"nombre": nombre, "nuevos": nuevos, "bajadas": bajadas, "url_sheets": url_sheets})
 
-        # 9. Generar index.html y publicar todo en GitHub Pages
+        # 9. Generar index.html + editor configuracion y publicar en GitHub Pages
         if busquedas_info:
             log.info(sep)
             log.info("Generando y publicando dashboard en GitHub Pages...")
             paginas_html["index.html"] = generar_index_html(busquedas_info)
+            # Editor config: no enlazado desde ninguna página, solo accesible por URL directa
+            paginas_html["editar_configuracion.html"] = generar_editor_configuracion()
             url_pages = publicar_github_pages(paginas_html)
             if url_pages:
-                log.info(f"Dashboard disponible en: {url_pages}")
+                log.info(f"Dashboard: {url_pages}")
+                log.info(f"Editor config: {url_pages}editar_configuracion.html")
 
     except Exception as e:
         log.critical(f"Error crítico: {e}", exc_info=True)
@@ -1311,5 +1655,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
+    
