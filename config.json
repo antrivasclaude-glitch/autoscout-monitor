@@ -16,7 +16,8 @@
       "fuel": "D",
       "pais": "es",
       "max_paginas": 5,
-      "pausa_seg": 3
+      "pausa_seg": 3,
+      "adjuntar_hoja_calculo": true
     },
     {
       "nombre": "Mercedes GLC - España",
@@ -32,7 +33,8 @@
       "fuel": "D",
       "pais": "es",
       "max_paginas": 10,
-      "pausa_seg": 3
+      "pausa_seg": 3,
+      "adjuntar_hoja_calculo": true
     },
     {
       "nombre": "Mercedes GLC - Alemania",
@@ -48,7 +50,8 @@
       "fuel": "D",
       "pais": "de",
       "max_paginas": 10,
-      "pausa_seg": 3
+      "pausa_seg": 3,
+      "adjuntar_hoja_calculo": true
     }
   ],
   "email": {
