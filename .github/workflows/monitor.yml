@@ -1,34 +1,34 @@
 name: AutoScout24 Monitor
 
 on:
-  # schedule:
-  #   - cron: '0 5 * * *'   # Cada día 05:00 UTC = 07:00 España (verano)
-
-  # ─── WEBHOOK / DISPARO EXTERNO ───────────────────────────────────────────
-  # Permite lanzar el workflow manualmente desde la UI de GitHub o
-  # mediante la API de GitHub con una simple petición HTTP.
+  # ─── Solo ejecución manual / webhook externo ─────────────────────────────
+  # El cron está desactivado. Para lanzar el agente:
   #
-  # Desde terminal (reemplaza TOKEN, OWNER y REPO):
+  # Opción A — Desde la UI de GitHub:
+  #   Actions → AutoScout24 Monitor → Run workflow
+  #
+  # Opción B — Via API (curl/Python/n8n/etc.):
   #   curl -X POST \
+  #     -H "Authorization: token TU_PAT" \
   #     -H "Accept: application/vnd.github.v3+json" \
-  #     -H "Authorization: token TU_GITHUB_TOKEN" \
   #     https://api.github.com/repos/OWNER/REPO/actions/workflows/monitor.yml/dispatches \
   #     -d '{"ref":"main"}'
-  #
-  # Con un GitHub App token o PAT (Personal Access Token) con permiso
-  # "Actions: write" y "Contents: read" es suficiente.
   # ─────────────────────────────────────────────────────────────────────────
   workflow_dispatch:
     inputs:
       razon:
-        description: 'Motivo de ejecución manual (opcional)'
+        description: 'Motivo de ejecución (opcional)'
         required: false
         default: 'Ejecución manual'
+
+permissions:
+  contents: write   # Necesario para publicar en gh-pages
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
 
@@ -47,6 +47,9 @@ jobs:
 
       - name: Ejecutar agente
         env:
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_PASSWORD:          ${{ secrets.EMAIL_PASSWORD }}
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          GITHUB_TOKEN:            ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY:       ${{ github.repository }}
         run: python autoscout_agent.py
+        
