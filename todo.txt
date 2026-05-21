@@ -1,1 +1,7 @@
-tyytry
+- Eliminar vehiculos si al entrar en la url del vehiculo aparece el texto "Este vehículo ya no está disponible."
+- Comprobar editor json con tiken oculto
+- en los ficheros .py o .html , indicar con un comentario la fecha de la version que se esta usando
+- tematizacion en la pagina web , index y demas no funciona
+- Página ver_registros.html — solo accesible por URL directa , esta pagina permite cargar y revisar los ficheros de log
+- la hoja de calculo que adjutnas en los emails que no sea un enlace , que sea el fichero xlsx completo
+- en el fichero config.json que compruebe si existen lps campos destino_2 , destino_3 , destino_4 y destino_5 y si contienen una direccion de email valida que tambien envien el mismo correo que al campo destino
