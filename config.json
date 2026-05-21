@@ -57,6 +57,10 @@
   "email": {
     "origen": "ant.rivas.claude@gmail.com",
     "destino": "ant.rivas@gmail.com",
+    "destino_2": "",
+    "destino_3": "",
+    "destino_4": "",
+    "destino_5": "",
     "servidor_smtp": "smtp.gmail.com",
     "puerto_smtp": 465
   },
