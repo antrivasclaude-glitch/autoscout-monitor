@@ -4,50 +4,78 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AutoScout24 Monitor</title>
+<!-- v7 (2026-05-21) -->
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
-header{background:#1a1a1a;color:white;padding:20px 24px}
-header h1{font-size:18px;font-weight:600}
-header p{font-size:13px;color:#888;margin-top:4px}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;min-height:100vh;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}
+/* ── TEMAS ── */
+body.tema-claro{--bg:#f5f5f0;--fg:#1a1a1a;--hdr:#1a1a1a;--hdr-fg:white;--card:#fff;--card-b:#ebebeb;--stat-bg:#f9f9f7;--stat-fg:#1a1a1a;--lbl:#aaa;--val:#1a1a1a;--val-blue:#1e40af;--val-red:#991b1b}
+body.tema-oscuro{--bg:#0f1117;--fg:#e2e8f0;--hdr:#1e2433;--hdr-fg:#e2e8f0;--card:#1e2433;--card-b:#2d3748;--stat-bg:#161b27;--stat-fg:#e2e8f0;--lbl:#64748b;--val:#e2e8f0;--val-blue:#60a5fa;--val-red:#f87171}
+body.tema-verde{--bg:#f0f7f0;--fg:#1a2e1a;--hdr:#1a3a1a;--hdr-fg:white;--card:#fff;--card-b:#c6e6c6;--stat-bg:#edf7ed;--stat-fg:#1a2e1a;--lbl:#6b8f6b;--val:#1a2e1a;--val-blue:#166534;--val-red:#92400e}
+body.tema-azul{--bg:#eff6ff;--fg:#1e3a8a;--hdr:#1e40af;--hdr-fg:white;--card:#fff;--card-b:#bfdbfe;--stat-bg:#dbeafe;--stat-fg:#1e3a8a;--lbl:#60a5fa;--val:#1e3a8a;--val-blue:#1d4ed8;--val-red:#dc2626}
+body.tema-purpura{--bg:#faf5ff;--fg:#581c87;--hdr:#7c3aed;--hdr-fg:white;--card:#fff;--card-b:#e9d5ff;--stat-bg:#f3e8ff;--stat-fg:#581c87;--lbl:#a78bfa;--val:#581c87;--val-blue:#7c3aed;--val-red:#dc2626}
+header{background:var(--hdr);color:var(--hdr-fg);padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:18px;font-weight:600;flex:1;min-width:200px}
+header p{font-size:13px;opacity:.7;margin-top:4px}
+.tema-sel{display:flex;gap:6px;align-items:center;margin-left:auto}
+.tema-sel span{font-size:11px;opacity:.7}
+.tema-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border .15s}
+.tema-btn:hover,.tema-btn.on{border-color:var(--hdr-fg)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}
-a.card{background:white;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #ebebeb;text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}
+a.card{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid var(--card-b);text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}
 a.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}
-.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:#1a1a1a}
+.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:var(--fg)}
 .cs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
-.c{background:#f9f9f7;border-radius:7px;padding:8px 10px}
-.cl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
-.cv{font-size:17px;font-weight:600}
-.cvb{color:#1e40af}.cvr{color:#991b1b}
-.cf{font-size:11px;color:#bbb;border-top:1px solid #f2f2f2;padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}
-.cf span{color:#1a1a1a;font-weight:500;font-size:12px}
+.c{background:var(--stat-bg);border-radius:7px;padding:8px 10px}
+.cl{font-size:10px;color:var(--lbl);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.cv{font-size:17px;font-weight:600;color:var(--stat-fg)}
+.cvb{color:var(--val-blue)}.cvr{color:var(--val-red)}
+.cf{font-size:11px;color:var(--lbl);border-top:1px solid var(--card-b);padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}
+.cf span{color:var(--val);font-weight:500;font-size:12px}
 </style>
 </head>
-<body>
-<header><h1>AutoScout24 Monitor</h1><p>Actualizado: 21/05/2026</p></header>
+<body class="tema-claro">
+<header>
+  <div>
+    <h1>AutoScout24 Monitor</h1>
+    <p>Actualizado: 22/05/2026</p>
+  </div>
+  <div class="tema-sel">
+    <span>Tema</span>
+    <div class="tema-btn on" id="tc" title="Claro" style="background:#f5f5f0" onclick="setTema('tema-claro',this)"></div>
+    <div class="tema-btn" id="to" title="Oscuro" style="background:#0f1117" onclick="setTema('tema-oscuro',this)"></div>
+    <div class="tema-btn" id="tv" title="Verde" style="background:#1a3a1a" onclick="setTema('tema-verde',this)"></div>
+    <div class="tema-btn" id="ta" title="Azul" style="background:#1e40af" onclick="setTema('tema-azul',this)"></div>
+    <div class="tema-btn" id="tp" title="Púrpura" style="background:#7c3aed" onclick="setTema('tema-purpura',this)"></div>
+  </div>
+</header>
 <div class="grid"><a class="card" href="busquedas/mercedes-glc-espana.html">
   <h2>Mercedes GLC - España</h2>
   <div class="cs">
-    <div class="c"><div class="cl">Total</div><div class="cv">173</div></div>
-    <div class="c"><div class="cl">Nuevos hoy</div><div class="cv cvb">0</div></div>
-    <div class="c"><div class="cl">Bajadas hoy</div><div class="cv cvr">0</div></div>
-    <div class="c"><div class="cl">Precio mín</div><div class="cv" style="font-size:14px">23.290 €</div></div>
-    <div class="c"><div class="cl">Precio med</div><div class="cv" style="font-size:14px">29.797 €</div></div>
-    <div class="c"><div class="cl">Última act.</div><div class="cv" style="font-size:13px">2026-05-21</div></div>
+    <div class="c"><div class="cl">Total</div><div class="cv">10</div></div>
+    <div class="c"><div class="cl">Nuevos hoy</div><div class="cv cvb">3</div></div>
+    <div class="c"><div class="cl">Bajadas hoy</div><div class="cv cvr">6</div></div>
+    <div class="c"><div class="cl">Precio mín</div><div class="cv" style="font-size:14px">25.990 €</div></div>
+    <div class="c"><div class="cl">Precio med</div><div class="cv" style="font-size:14px">30.764 €</div></div>
+    <div class="c"><div class="cl">Última act.</div><div class="cv" style="font-size:13px">2026-05-22</div></div>
   </div>
-  <div class="cf"><span>Ver detalle →</span><span style="color:#aaa;font-size:11px">173 anuncios históricos</span></div>
+  <div class="cf"><span>Ver detalle →</span><span style="color:#aaa;font-size:11px">10 anuncios históricos</span></div>
 </a><a class="card" href="busquedas/mercedes-glc-alemania.html">
   <h2>Mercedes GLC - Alemania</h2>
   <div class="cs">
-    <div class="c"><div class="cl">Total</div><div class="cv">142</div></div>
-    <div class="c"><div class="cl">Nuevos hoy</div><div class="cv cvb">0</div></div>
-    <div class="c"><div class="cl">Bajadas hoy</div><div class="cv cvr">0</div></div>
-    <div class="c"><div class="cl">Precio mín</div><div class="cv" style="font-size:14px">24.960 €</div></div>
-    <div class="c"><div class="cl">Precio med</div><div class="cv" style="font-size:14px">30.416 €</div></div>
-    <div class="c"><div class="cl">Última act.</div><div class="cv" style="font-size:13px">2026-05-21</div></div>
+    <div class="c"><div class="cl">Total</div><div class="cv">10</div></div>
+    <div class="c"><div class="cl">Nuevos hoy</div><div class="cv cvb">9</div></div>
+    <div class="c"><div class="cl">Bajadas hoy</div><div class="cv cvr">1</div></div>
+    <div class="c"><div class="cl">Precio mín</div><div class="cv" style="font-size:14px">26.500 €</div></div>
+    <div class="c"><div class="cl">Precio med</div><div class="cv" style="font-size:14px">31.168 €</div></div>
+    <div class="c"><div class="cl">Última act.</div><div class="cv" style="font-size:13px">2026-05-22</div></div>
   </div>
-  <div class="cf"><span>Ver detalle →</span><span style="color:#aaa;font-size:11px">142 anuncios históricos</span></div>
+  <div class="cf"><span>Ver detalle →</span><span style="color:#aaa;font-size:11px">10 anuncios históricos</span></div>
 </a></div>
+<script>
+function setTema(t,el){document.body.className=t;localStorage.setItem("as24-tema",t);document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}
+(function(){const t=localStorage.getItem("as24-tema")||"tema-claro";const map={"tema-claro":"tc","tema-oscuro":"to","tema-verde":"tv","tema-azul":"ta","tema-purpura":"tp"};document.body.className=t;const el=document.getElementById(map[t]);if(el){document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}})();
+</script>
 </body>
 </html>
