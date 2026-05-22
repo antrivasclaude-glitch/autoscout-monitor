@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ver registros — AutoScout24 Monitor</title>
+<!-- v7 (2026-05-21) -->
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
+header{background:#1e2433;border-bottom:1px solid #2d3748;padding:16px 24px}
+header h1{font-size:16px;font-weight:600}
+header p{font-size:12px;color:#64748b;margin-top:2px}
+.main{max-width:1200px;margin:0 auto;padding:24px}
+.card{background:#1e2433;border:1px solid #2d3748;border-radius:10px;padding:20px;margin-bottom:16px}
+.card h3{font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+button{padding:6px 14px;border-radius:6px;border:1px solid #2d3748;background:#161b27;color:#94a3b8;font-size:12px;cursor:pointer;transition:all .15s}
+button:hover{border-color:#4b5563;color:#e2e8f0}
+button.active{background:#1d4ed8;border-color:#1d4ed8;color:white}
+.log-viewer{background:#0d1117;border:1px solid #2d3748;border-radius:8px;padding:16px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.6;max-height:600px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.log-line{margin:2px 0}
+.log-line.error{color:#f87171}
+.log-line.warning{color:#fbbf24}
+.log-line.info{color:#94a3b8}
+.log-line.debug{color:#475569}
+.status{padding:10px 12px;border-radius:6px;font-size:12px;margin-top:12px}
+.status.ok{background:#052e16;color:#86efac;border:1px solid #14532d}
+.status.err{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d}
+.status.loading{background:#161b27;color:#64748b;border:1px solid #2d3748}
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Ver registros</h1>
+  <p>Logs de ejecuciones del AutoScout24 Monitor</p>
+</header>
+<div class="main">
+  <div class="card">
+    <h3>Seleccionar log</h3>
+    <div class="selector" id="selector">
+      <div class="status loading">Cargando logs disponibles...</div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Contenido del log</h3>
+    <div class="log-viewer" id="viewer">Selecciona un log arriba para visualizarlo</div>
+  </div>
+</div>
+<script>
+const REPO = "antrivasclaude-glitch/autoscout-monitor";
+const BASE_URL = `https://antrivasclaude-glitch.github.io/autoscout-monitor/`;
+
+async function cargarLogs() {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/git/trees/gh-pages?recursive=1`);
+    if (!r.ok) throw new Error("No se pudo acceder a la API");
+    
+    const data = await r.json();
+    const logs = data.tree
+      .filter(f => f.path.startsWith("log_") && f.path.endsWith(".txt"))
+      .map(f => f.path.replace("log_", "").replace(".txt", ""))
+      .sort().reverse();
+    
+    const sel = document.getElementById("selector");
+    if (logs.length === 0) {
+      sel.innerHTML = '<div class="status err">No hay logs disponibles</div>';
+      return;
+    }
+    
+    sel.innerHTML = logs.map(fecha => 
+      `<button onclick="cargarLog('${fecha}')">${fecha}</button>`
+    ).join("");
+  } catch(e) {
+    document.getElementById("selector").innerHTML = 
+      `<div class="status err">Error: ${e.message}</div>`;
+  }
+}
+
+async function cargarLog(fecha) {
+  const viewer = document.getElementById("viewer");
+  viewer.innerHTML = '<div class="status loading">Cargando...</div>';
+  
+  document.querySelectorAll(".selector button").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+  
+  try {
+    const r = await fetch(`${BASE_URL}log_${fecha}.txt`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    
+    const texto = await r.text();
+    const lineas = texto.split("\n").map(linea => {
+      let clase = "info";
+      if (linea.includes("[ERROR")) clase = "error";
+      else if (linea.includes("[WARNING")) clase = "warning";
+      else if (linea.includes("[DEBUG")) clase = "debug";
+      return `<div class="log-line ${clase}">${linea}</div>`;
+    }).join("");
+    
+    viewer.innerHTML = lineas || '<div class="status err">Log vacío</div>';
+  } catch(e) {
+    viewer.innerHTML = `<div class="status err">Error cargando log: ${e.message}</div>`;
+  }
+}
+
+window.addEventListener("load", cargarLogs);
+</script>
+</body>
+</html>
