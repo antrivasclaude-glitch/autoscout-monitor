@@ -1184,7 +1184,7 @@ _HTML_INDEX = (
 # ══════════════════════════════════════════════════════════════
 
 def verificar_anuncios_activos(filas_hist: list[dict]) -> list[dict]:
-    """Verifica cada URL y elimina anuncios que ya no están disponibles.
+    """Verifica cada URL con técnicas anti-detección para evitar bloqueos.
     Retorna la lista actualizada sin los anuncios eliminados."""
     if not filas_hist:
         return []
@@ -1192,37 +1192,109 @@ def verificar_anuncios_activos(filas_hist: list[dict]) -> list[dict]:
     activos = []
     eliminados = []
     
-    for fila in filas_hist:
+    # User agents reales y variados
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15",
+    ]
+    
+    for idx, fila in enumerate(filas_hist):
         url = fila.get("url", "")
         if not url:
             activos.append(fila)
             continue
         
+        # Rotar User-Agent
+        ua = user_agents[idx % len(user_agents)]
+        
+        # Headers más completos para parecer navegador real
+        headers = {
+            "User-Agent": ua,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Cache-Control": "max-age=0",
+        }
+        
         try:
-            r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+            r = requests.get(url, timeout=15, headers=headers, allow_redirects=True)
+            
+            # 200 OK - revisar contenido
             if r.status_code == 200:
-                # Verificar si el texto indica que no está disponible
-                if "Este vehículo ya no está disponible" in r.text or                    "This vehicle is no longer available" in r.text or                    "Dieses Fahrzeug ist nicht mehr verfügbar" in r.text:
+                texto_lower = r.text.lower()
+                # Buscar múltiples indicadores de "no disponible"
+                indicadores_no_disponible = [
+                    "este vehículo ya no está disponible",
+                    "this vehicle is no longer available",
+                    "dieses fahrzeug ist nicht mehr verfügbar",
+                    "vehicle has been sold",
+                    "fahrzeug wurde verkauft",
+                    "vehículo vendido",
+                    "no longer online",
+                    "nicht mehr online",
+                ]
+                
+                if any(ind in texto_lower for ind in indicadores_no_disponible):
                     eliminados.append(fila.get("id", url[:30]))
                     log.info(f"  Anuncio eliminado (no disponible): {fila.get('titulo', '')[:50]}")
                 else:
-                    activos.append(fila)
+                    # Verificar que tiene contenido real del anuncio
+                    tiene_precio = any(x in texto_lower for x in ["price", "precio", "preis", "€", "eur"])
+                    if tiene_precio:
+                        activos.append(fila)
+                    else:
+                        # Página extraña, mantener por seguridad
+                        activos.append(fila)
+                        log.debug(f"  Anuncio mantenido (sin precio visible): {fila.get('titulo', '')[:50]}")
+            
+            # 404 - claramente eliminado
             elif r.status_code == 404:
                 eliminados.append(fila.get("id", url[:30]))
                 log.info(f"  Anuncio eliminado (404): {fila.get('titulo', '')[:50]}")
-            else:
-                # Si hay error pero no es 404, lo mantenemos
+            
+            # 403, 429, 503 - posible bloqueo, mantener el anuncio
+            elif r.status_code in (403, 429, 503):
                 activos.append(fila)
+                log.warning(f"  HTTP {r.status_code} en {url[:50]} - manteniendo anuncio por seguridad")
+                # Aumentar pausa si detectamos bloqueo
+                time.sleep(2)
+            
+            # Otros códigos - mantener por seguridad
+            else:
+                activos.append(fila)
+                log.debug(f"  HTTP {r.status_code} - manteniendo: {fila.get('titulo', '')[:50]}")
+                
+        except requests.exceptions.Timeout:
+            # Timeout - mantener el anuncio
+            activos.append(fila)
+            log.debug(f"  Timeout verificando {url[:40]} - manteniendo")
         except Exception as e:
-            # Error de red, mantener el anuncio
+            # Cualquier error - mantener el anuncio por seguridad
             activos.append(fila)
             log.debug(f"  Error verificando {url[:40]}: {e}")
         
-        # Pausa breve entre requests
-        time.sleep(0.5)
+        # Pausa de 2 segundos entre requests + variación aleatoria
+        import random
+        pausa = 2.0 + random.uniform(0, 1.0)  # 2-3 segundos
+        time.sleep(pausa)
+        
+        # Log de progreso cada 20 anuncios
+        if (idx + 1) % 20 == 0:
+            log.info(f"  Progreso verificación: {idx + 1}/{len(filas_hist)} anuncios verificados")
     
     if eliminados:
-        log.info(f"Anuncios eliminados (no disponibles): {len(eliminados)}")
+        log.info(f"Anuncios eliminados (no disponibles): {len(eliminados)}/{len(filas_hist)}")
+    else:
+        log.info(f"Verificación completa: {len(activos)} anuncios activos, 0 eliminados")
     
     return activos
 
@@ -1734,8 +1806,8 @@ def main():
                     })
                 log.info(f"[{nombre}] Fallback: {len(filas_hist)} anuncios del scraping actual")
             
-            # 7. Verificar anuncios activos (solo filtra la lista, no modifica Sheets todavía)
-            log.info(f"[{nombre}] Verificando disponibilidad de anuncios...")
+            # 7. Verificar anuncios activos con técnicas anti-detección mejoradas
+            log.info(f"[{nombre}] Verificando disponibilidad de anuncios (con anti-detección)...")
             filas_hist_limpias = verificar_anuncios_activos(filas_hist)
             
             # 7b. Limpieza de Sheets cada lunes (elimina anuncios no disponibles)
@@ -1821,4 +1893,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-    
