@@ -1,11 +1,20 @@
 """
-AutoScout24 Agent — v7 (2026-05-21)
+AutoScout24 Agent — v7 (2026-05-22)
 Versión GitHub Actions
-- Config en config.json (múltiples búsquedas, filtros opcionales)
-- Credenciales Google: variable GOOGLE_CREDENTIALS_JSON (base64)
-- Contraseña email:    variable EMAIL_PASSWORD
-- Estado entre ejecuciones: Google Sheets (pestaña _Estado_)
-- Scraping: extracción desde JSON de Next.js + fallback CSS mejorado
+
+Cambios v7:
+- Eliminación automática de anuncios si no aparecen en 7 días consecutivos
+- Múltiples destinatarios email: destino_2, destino_3, destino_4, destino_5
+- Adjunto XLSX en emails (no solo CSV)
+- Dashboard: 5 temas visuales persistentes (index + búsquedas)
+- Página ver_registros.html para consultar logs históricos
+- Comentarios de versión en todos los archivos
+
+Config en config.json (múltiples búsquedas, filtros opcionales)
+Credenciales Google: variable GOOGLE_CREDENTIALS_JSON (base64)
+Contraseña email: variable EMAIL_PASSWORD
+Estado entre ejecuciones: Google Sheets (pestaña _Estado_)
+Scraping: extracción desde JSON de Next.js + fallback CSS mejorado
 """
 
 import os, sys, json, time, base64, re, smtplib, logging, tempfile, csv, io, unicodedata
@@ -1025,11 +1034,7 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
         "bajadas":   bajadas,
     }
     json_bytes = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
-    # Sanitizar nombre para filename (eliminar caracteres prohibidos, mantener unicode)
-    nombre_limpio = re.sub(r'[<>:"/\\|?*]', '', nombre).replace(' ', '_').strip('_')
-    if not nombre_limpio:
-        nombre_limpio = "busqueda"
-    nombre_fichero = f"{nombre_limpio}_{date.today().isoformat()}.json"
+    nombre_fichero = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}.json"
 
     try:
         # Recoger todos los destinatarios válidos
@@ -1078,11 +1083,7 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
                 wb.save(xlsx_buf)
                 xlsx_bytes = xlsx_buf.getvalue()
                 
-                # Sanitizar nombre para filename (mantener unicode, eliminar caracteres prohibidos)
-                nombre_limpio = re.sub(r'[<>:"/\\|?*]', '', nombre).replace(' ', '_').strip('_')
-                if not nombre_limpio:
-                    nombre_limpio = "busqueda"
-                xlsx_name = f"{nombre_limpio}_{date.today().isoformat()}_completo.xlsx"
+                xlsx_name = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}_completo.xlsx"
                 adj_xlsx = MIMEApplication(xlsx_bytes, _subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 adj_xlsx["Content-Disposition"] = f'attachment; filename="{xlsx_name}"'
                 msg.attach(adj_xlsx)
@@ -1110,25 +1111,88 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
 #  LECTURA COMPLETA SHEETS (histórico para dashboard)
 # ══════════════════════════════════════════════════════════════
 
+
+def marcar_inactivos_7dias(nombre: str, ids_actuales: set[str]) -> int:
+    """
+    Marca anuncios como inactivos si no aparecen en ids_actuales
+    y ya llevan 7+ días sin aparecer (última_deteccion < hoy - 7 días).
+    Actualiza el campo Estado a 'INACTIVO' en lugar de borrarlos.
+    Devuelve el número de anuncios marcados como inactivos.
+    """
+    try:
+        from datetime import timedelta
+        sp = conectar_sheets()
+        ws = sp.worksheet(nombre[:50])
+        filas = ws.get_all_values()
+        if len(filas) < 2:
+            return 0
+
+        hdrs = filas[0]
+        idx_id = hdrs.index("ID") if "ID" in hdrs else 0
+        idx_estado = hdrs.index("Estado") if "Estado" in hdrs else -1
+        idx_fecha = hdrs.index("Fecha Detectado") if "Fecha Detectado" in hdrs else -1
+
+        if idx_estado == -1 or idx_fecha == -1:
+            log.warning(f"[{nombre}] Sin columnas Estado/Fecha Detectado — skip marcar inactivos")
+            return 0
+
+        hoy = date.today()
+        limite = hoy - timedelta(days=7)
+        marcados = 0
+        batch_updates = []
+
+        for i, fila in enumerate(filas[1:], start=2):
+            if not fila or len(fila) <= max(idx_id, idx_estado, idx_fecha):
+                continue
+            id_anuncio = fila[idx_id]
+            estado_actual = fila[idx_estado]
+            fecha_str = fila[idx_fecha]
+
+            # Si ya está marcado como INACTIVO, skip
+            if "INACTIVO" in estado_actual:
+                continue
+
+            # Si está en el scraping actual, skip (sigue activo)
+            if id_anuncio in ids_actuales:
+                continue
+
+            # Parsear fecha_detectado
+            try:
+                fecha_detectado = date.fromisoformat(fecha_str)
+            except (ValueError, TypeError):
+                continue
+
+            # Si hace más de 7 días que no aparece → marcar INACTIVO
+            if fecha_detectado < limite:
+                nueva_fila = list(fila)
+                nueva_fila[idx_estado] = "INACTIVO"
+                # Convertir a lista de listas para batch_update
+                rango = f"A{i}:{chr(65 + len(nueva_fila) - 1)}{i}"
+                batch_updates.append({"range": rango, "values": [nueva_fila]})
+                marcados += 1
+
+        if batch_updates:
+            ws.batch_update(batch_updates)
+            log.info(f"[{nombre}] {marcados} anuncios marcados como INACTIVOS (>7 días sin aparecer)")
+        return marcados
+
+    except gspread.WorksheetNotFound:
+        log.warning(f"[{nombre}] Hoja no encontrada para marcar inactivos")
+        return 0
+    except Exception as e:
+        log.error(f"[{nombre}] Error marcando inactivos: {e}", exc_info=True)
+        return 0
+
+
 def leer_hoja_completa(nombre: str) -> list[dict]:
     """Lee TODOS los anuncios históricos de la hoja de una búsqueda desde Sheets."""
     try:
         sp  = conectar_sheets()
-        nombre_ws = nombre[:50]
-        log.debug(f"[{nombre}] Intentando leer worksheet: '{nombre_ws}'")
-        ws  = sp.worksheet(nombre_ws)
+        ws  = sp.worksheet(nombre[:50])
         filas = ws.get_all_values()
-        log.debug(f"[{nombre}] Filas obtenidas: {len(filas)}")
-        
-        if not filas:
-            log.warning(f"[{nombre}] Hoja vacía (0 filas)")
+        if not filas or len(filas) < 2:
             return []
-        if len(filas) < 2:
-            log.warning(f"[{nombre}] Solo cabeceras, sin datos ({len(filas)} fila(s))")
-            return []
-            
         hdrs = filas[0]
-        log.debug(f"[{nombre}] Cabeceras: {hdrs[:3]}...")
         result = []
         for row in filas[1:]:
             if not any(row): continue
@@ -1170,11 +1234,11 @@ def _slug(nombre: str) -> str:
 
 # ── Template HTML de página de búsqueda ───────────────────────
 _HTML_BUSQUEDA = (
-'<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>__NOMBRE__ — AutoScout24 Monitor</title>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:\'IBM Plex Sans\',system-ui,sans-serif;min-height:100vh;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}\n/* ── TEMAS ── */\nbody.tema-claro{--bg:#f5f5f0;--fg:#1a1a1a;--nav:#1a1a1a;--nav-fg:white;--card:white;--card-b:#ebebeb;--stat:#f9f9f7;--lbl:#aaa;--sep:#ddd;--th:#1a1a1a;--th-fg:white;--th-hov:#2d2d2d;--row-hov:#fafaf8;--td-b:#f2f2f2;--btn:#ddd;--btn-fg:#555;--inp-b:#ddd;--inp-fg:#1a1a1a;--cnt:#999;--badge-n-bg:#dbeafe;--badge-n-fg:#1e3a8a;--badge-b-bg:#fee2e2;--badge-b-fg:#7f1d1d;--badge-c-bg:#f3f4f6;--badge-c-fg:#6b7280;--pc-n:#1e40af;--pc-b:#991b1b;--pc-o:#bbb}\nbody.tema-oscuro{--bg:#0f1117;--fg:#e2e8f0;--nav:#1e2433;--nav-fg:#e2e8f0;--card:#1e2433;--card-b:#2d3748;--stat:#161b27;--lbl:#64748b;--sep:#2d3748;--th:#1e2433;--th-fg:#94a3b8;--th-hov:#2d3a52;--row-hov:#1a2236;--td-b:#2d3748;--btn:#2d3748;--btn-fg:#94a3b8;--inp-b:#2d3748;--inp-fg:#e2e8f0;--cnt:#64748b;--badge-n-bg:#1e3a5f;--badge-n-fg:#93c5fd;--badge-b-bg:#450a0a;--badge-b-fg:#fca5a5;--badge-c-bg:#1f2937;--badge-c-fg:#9ca3af;--pc-n:#60a5fa;--pc-b:#f87171;--pc-o:#475569}\nbody.tema-verde{--bg:#f0f7f0;--fg:#1a2e1a;--nav:#1a3a1a;--nav-fg:white;--card:white;--card-b:#c6e6c6;--stat:#edf7ed;--lbl:#6b8f6b;--sep:#c6e6c6;--th:#1a3a1a;--th-fg:white;--th-hov:#2d5a2d;--row-hov:#f5fbf5;--td-b:#e0f0e0;--btn:#c6e6c6;--btn-fg:#1a3a1a;--inp-b:#c6e6c6;--inp-fg:#1a2e1a;--cnt:#6b8f6b;--badge-n-bg:#dcfce7;--badge-n-fg:#14532d;--badge-b-bg:#fef9c3;--badge-b-fg:#713f12;--badge-c-bg:#f0fdf4;--badge-c-fg:#4b5563;--pc-n:#166534;--pc-b:#92400e;--pc-o:#9ca3af}\nnav{background:var(--nav);color:var(--nav-fg);padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}\nnav a{color:#aaa;text-decoration:none;font-size:13px}\nnav a:hover{color:var(--nav-fg)}\nnav h1{font-size:15px;font-weight:600;flex:1;min-width:180px}\n.upd{font-size:12px;color:#666}\n.tema-sel{margin-left:auto;display:flex;gap:6px;align-items:center}\n.tema-sel span{font-size:11px;color:#888}\n.tema-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border .15s}\n.tema-btn:hover,.tema-btn.on{border-color:var(--nav-fg)}\n.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:16px 24px;background:var(--card);border-bottom:1px solid var(--card-b)}\n.stat{background:var(--stat);border-radius:8px;padding:10px 12px}\n.slabel{font-size:10px;color:var(--lbl);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}\n.svalue{font-size:18px;font-weight:600}\n.sv-blue{color:var(--pc-n)}.sv-red{color:var(--pc-b)}\n.controls{padding:12px 24px;background:var(--card);border-bottom:1px solid var(--card-b);display:flex;gap:8px;flex-wrap:wrap;align-items:center}\n.controls input,.controls select{border:1px solid var(--inp-b);border-radius:6px;padding:6px 10px;font-size:13px;font-family:inherit;background:var(--card);color:var(--inp-fg)}\n.controls input:focus,.controls select:focus{outline:none;border-color:var(--fg)}\n.controls input{min-width:200px}\n.sep{color:var(--sep);font-size:12px}\n.count{padding:8px 24px 0;font-size:12px;color:var(--cnt)}\n.tw{padding:12px 24px 24px;overflow-x:auto}\ntable{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.07)}\nthead{background:var(--th);color:var(--th-fg)}\nth{padding:10px 12px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap;cursor:pointer;user-select:none}\nth:hover{background:var(--th-hov)}\nth.asc::after{content:" ↑"}th.desc::after{content:" ↓"}\ntd{padding:9px 12px;border-bottom:1px solid var(--td-b);vertical-align:middle}\ntr:last-child td{border:none}\ntr:hover td{background:var(--row-hov)}\n.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:500;white-space:nowrap}\n.bn{background:var(--badge-n-bg);color:var(--badge-n-fg)}\n.bb{background:var(--badge-b-bg);color:var(--badge-b-fg)}\n.bc{background:var(--badge-c-bg);color:var(--badge-c-fg)}\n.pm{font-weight:600}.pb{color:var(--pc-n)}.pr{color:var(--pc-b)}\n.po{font-size:11px;color:var(--pc-o);text-decoration:line-through;display:block}\n.btn-ver{display:inline-block;padding:4px 10px;border:1px solid var(--btn);border-radius:5px;font-size:11px;color:var(--btn-fg);text-decoration:none;white-space:nowrap}\n.btn-ver:hover{border-color:var(--fg);color:var(--fg)}\n.pag{padding:12px 24px;display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap}\n.pag button{padding:5px 11px;border:1px solid var(--btn);border-radius:5px;background:var(--card);cursor:pointer;font-size:13px;font-family:inherit;color:var(--fg)}\n.pag button:hover{border-color:var(--fg)}\n.pag button.on{background:var(--th);color:var(--th-fg);border-color:var(--th)}\n.pinfo{font-size:12px;color:var(--cnt);margin:0 6px}\n.empty{text-align:center;padding:40px;color:var(--cnt);font-size:13px}\n</style>\n</head>\n<body class="tema-claro">\n<nav>\n  <a href="../index.html">&#8592; Inicio</a>\n  <h1>__NOMBRE__</h1>\n  <span class="upd">Actualizado: __FECHA__</span>\n  <div class="tema-sel">\n    <span>Tema</span>\n    <div class="tema-btn on" id="tc" title="Claro" style="background:#f5f5f0" onclick="setTema(\'tema-claro\',this)"></div>\n    <div class="tema-btn" id="to" title="Oscuro" style="background:#0f1117" onclick="setTema(\'tema-oscuro\',this)"></div>\n    <div class="tema-btn" id="tv" title="Verde" style="background:#1a3a1a" onclick="setTema(\'tema-verde\',this)"></div>\n  </div>\n</nav>\n<div class="stats" id="stats"></div>\n<div class="controls">\n  <input type="text" id="q" placeholder="Buscar t\u00edtulo, ciudad...">\n  <select id="fe">\n    <option value="">Todos los estados</option>\n    <option value="NUEVO">Nuevos (hoy)</option>\n    <option value="BAJADA">Bajadas (hoy)</option>\n    <option value="conocido">Conocidos</option>\n  </select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">A\u00f1o desde</label>\n  <select id="faf"><option value="">\u2014</option></select>\n  <label style="font-size:12px;color:var(--lbl)">hasta</label>\n  <select id="fat"><option value="">\u2014</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">Precio m\u00e1x</label>\n  <select id="fpm"><option value="">\u2014</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">Km m\u00e1x</label>\n  <select id="fkm"><option value="">\u2014</option></select>\n</div>\n<div class="count" id="cnt"></div>\n<div class="tw">\n<table>\n<thead><tr>\n  <th data-c="estado">Estado</th>\n  <th data-c="titulo">T\u00edtulo</th>\n  <th data-c="precio">Precio</th>\n  <th data-c="anio">A\u00f1o</th>\n  <th data-c="kmn">Km</th>\n  <th>Combustible</th>\n  <th>Ubicaci\u00f3n</th>\n  <th data-c="fecha_detectado">Detectado</th>\n  <th></th>\n</tr></thead>\n<tbody id="tb"></tbody>\n</table>\n<p class="empty" id="emp" style="display:none">Sin resultados.</p>\n</div>\n<div class="pag" id="pag"></div>\n<script>\nconst RAW=__DATA__;\nconst PG=100;\nlet sC="precio",sD="asc",pg=0;\nfunction setTema(t,el){document.body.className=t;localStorage.setItem("as24-tema",t);document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}\n(function(){const t=localStorage.getItem("as24-tema")||"tema-claro";const map={"tema-claro":"tc","tema-oscuro":"to","tema-verde":"tv"};document.body.className=t;const el=document.getElementById(map[t]);if(el){document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}})();\nfunction kmn(s){return s?parseInt(s.replace(/\\./g,"").replace(/[^\\d]/g,""))||0:0}\nfunction fp(n){n=parseInt(n)||0;return n?n.toLocaleString("es-ES")+" \u20ac":"\u2014"}\nconst ROWS=RAW.map(r=>({...r,precio:parseInt(r.precio)||0,precio_anterior:parseInt(r.precio_anterior)||0,kmn:kmn(r.km)}));\n(function init(){\n  const anios=[...new Set(ROWS.map(r=>r.anio).filter(Boolean))].sort();\n  ["faf","fat"].forEach(id=>{const s=document.getElementById(id);anios.forEach(a=>s.add(new Option(a,a)))});\n  const mx=Math.max(...ROWS.map(r=>r.precio),0);\n  const pm=document.getElementById("fpm");\n  [20000,25000,30000,35000,40000,45000,50000,60000,75000,100000].filter(p=>p<=mx+10000).forEach(p=>pm.add(new Option(p.toLocaleString("es-ES")+" \u20ac",p)));\n  const mxkm=Math.max(...ROWS.map(r=>r.kmn),0);\n  const fkm=document.getElementById("fkm");\n  [50000,75000,100000,125000,150000,175000,200000].filter(k=>k<=mxkm+25000).forEach(k=>fkm.add(new Option(k.toLocaleString("es-ES")+" km",k)));\n  document.querySelectorAll("th[data-c]").forEach(th=>th.addEventListener("click",()=>{const c=th.dataset.c;if(sC===c)sD=sD==="asc"?"desc":"asc";else{sC=c;sD="asc";}pg=0;render();}));\n  ["q","fe","faf","fat","fpm","fkm"].forEach(id=>{const el=document.getElementById(id);el.addEventListener(el.tagName==="INPUT"?"input":"change",()=>{pg=0;render();});});\n  const pr=ROWS.map(r=>r.precio).filter(Boolean);\n  const kms=ROWS.map(r=>r.kmn).filter(Boolean);\n  const nh=ROWS.filter(r=>(r.estado||"").includes("NUEVO")).length;\n  const bh=ROWS.filter(r=>(r.estado||"").includes("BAJADA")).length;\n  const fs=[...new Set(ROWS.map(r=>r.fecha_detectado).filter(Boolean))].sort();\n  const med=pr.length?Math.round(pr.reduce((a,b)=>a+b,0)/pr.length):0;\n  const km=kms.length?Math.round(kms.reduce((a,b)=>a+b,0)/kms.length):0;\n  document.getElementById("stats").innerHTML=[["Total",ROWS.length,""],["Precio m\u00edn",fp(Math.min(...pr)),""],["Precio medio",fp(med),""],["Precio m\u00e1x",fp(Math.max(...pr)),""],["Km medio",km?km.toLocaleString("es-ES")+" km":"\u2014",""],["Nuevos hoy",nh,"sv-blue"],["Bajadas hoy",bh,"sv-red"],["Desde",fs[0]||"\u2014",""]].map(([l,v,c])=>`<div class="stat"><div class="slabel">${l}</div><div class="svalue ${c}">${v}</div></div>`).join("");\n  render();\n})();\nfunction filt(){\n  const q=document.getElementById("q").value.toLowerCase();\n  const fe=document.getElementById("fe").value;\n  const af=document.getElementById("faf").value;\n  const at=document.getElementById("fat").value;\n  const pm=parseInt(document.getElementById("fpm").value)||0;\n  const km=parseInt(document.getElementById("fkm").value)||0;\n  return ROWS.filter(r=>{\n    if(q&&!(r.titulo||"").toLowerCase().includes(q)&&!(r.ubicacion||"").toLowerCase().includes(q))return false;\n    if(fe==="NUEVO"&&!(r.estado||"").includes("NUEVO"))return false;\n    if(fe==="BAJADA"&&!(r.estado||"").includes("BAJADA"))return false;\n    if(fe==="conocido"&&((r.estado||"").includes("NUEVO")||(r.estado||"").includes("BAJADA")))return false;\n    if(af&&(r.anio||"")<af)return false;\n    if(at&&(r.anio||"")>at)return false;\n    if(pm&&r.precio>pm)return false;\n    if(km&&r.kmn>km)return false;\n    return true;\n  });\n}\nfunction render(){\n  const rows=filt();\n  rows.sort((a,b)=>{\n    let av=a[sC],bv=b[sC];\n    if(["precio","kmn","precio_anterior"].includes(sC)){av=av||0;bv=bv||0;}\n    else if(sC==="anio"){av=parseInt(av)||0;bv=parseInt(bv)||0;}\n    else{av=(av||"").toLowerCase();bv=(bv||"").toLowerCase();}\n    return sD==="asc"?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);\n  });\n  document.querySelectorAll("th[data-c]").forEach(th=>{th.className=th.dataset.c===sC?sD:"";});\n  const tot=rows.length,pages=Math.max(1,Math.ceil(tot/PG));\n  pg=Math.min(pg,pages-1);\n  const sl=rows.slice(pg*PG,(pg+1)*PG);\n  document.getElementById("cnt").textContent=`Mostrando ${sl.length} de ${tot} anuncios (${ROWS.length} total)`;\n  document.getElementById("tb").innerHTML=sl.map(r=>{\n    const n=(r.estado||"").includes("NUEVO"),b=(r.estado||"").includes("BAJADA");\n    const bc=n?"bn":b?"bb":"bc";\n    const bt=n?"Nuevo hoy":b?`Bajada ${r.porcentaje_bajada||""}%`:"Conocido";\n    const pc=n?`<span class="pm pb">${fp(r.precio)}</span>`:b&&r.precio_anterior?`<span class="po">${fp(r.precio_anterior)}</span><span class="pm pr">${fp(r.precio)}</span>`:`<span class="pm">${fp(r.precio)}</span>`;\n    const lk=r.url?`<a href="${r.url}" target="_blank" class="btn-ver">Ver &#8594;</a>`:"\u2014";\n    return `<tr><td><span class="badge ${bc}">${bt}</span></td><td style="max-width:220px">${r.titulo||"\u2014"}</td><td style="white-space:nowrap">${pc}</td><td>${r.anio||"\u2014"}</td><td style="white-space:nowrap">${r.km||"\u2014"}</td><td style="font-size:12px;color:var(--lbl)">${r.combustible||"\u2014"}</td><td style="font-size:12px;color:var(--lbl)">${r.ubicacion||"\u2014"}</td><td style="font-size:12px;color:var(--cnt)">${r.fecha_detectado||"\u2014"}</td><td>${lk}</td></tr>`;\n  }).join("");\n  document.getElementById("emp").style.display=tot?"none":"block";\n  const pag=document.getElementById("pag");\n  if(pages<=1){pag.innerHTML="";return;}\n  let h=`<span class="pinfo">${tot} resultados</span>`;\n  const fr=Math.max(0,pg-2),to=Math.min(pages-1,pg+2);\n  if(fr>0)h+=`<button onclick="pg=0;render()">1</button>${fr>1?\'<span class="pinfo">\u2026</span>\':\'\'}`;\n  for(let i=fr;i<=to;i++)h+=`<button class="${i===pg?"on":""}" onclick="pg=${i};render()">${i+1}</button>`;\n  if(to<pages-1)h+=`${to<pages-2?\'<span class="pinfo">\u2026</span>\':\'\'}`;\n  pag.innerHTML=h;\n}\n</script>\n</body>\n</html>'
+'<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>__NOMBRE__ — AutoScout24 Monitor</title>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:\'IBM Plex Sans\',system-ui,sans-serif;min-height:100vh;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}\n/* ── TEMAS ── */\nbody.tema-claro{--bg:#f5f5f0;--fg:#1a1a1a;--nav:#1a1a1a;--nav-fg:white;--card:white;--card-b:#ebebeb;--stat:#f9f9f7;--lbl:#aaa;--sep:#ddd;--th:#1a1a1a;--th-fg:white;--th-hov:#2d2d2d;--row-hov:#fafaf8;--td-b:#f2f2f2;--btn:#ddd;--btn-fg:#555;--inp-b:#ddd;--inp-fg:#1a1a1a;--cnt:#999;--badge-n-bg:#dbeafe;--badge-n-fg:#1e3a8a;--badge-b-bg:#fee2e2;--badge-b-fg:#7f1d1d;--badge-c-bg:#f3f4f6;--badge-c-fg:#6b7280;--pc-n:#1e40af;--pc-b:#991b1b;--pc-o:#bbb}\nbody.tema-oscuro{--bg:#0f1117;--fg:#e2e8f0;--nav:#1e2433;--nav-fg:#e2e8f0;--card:#1e2433;--card-b:#2d3748;--stat:#161b27;--lbl:#64748b;--sep:#2d3748;--th:#1e2433;--th-fg:#94a3b8;--th-hov:#2d3a52;--row-hov:#1a2236;--td-b:#2d3748;--btn:#2d3748;--btn-fg:#94a3b8;--inp-b:#2d3748;--inp-fg:#e2e8f0;--cnt:#64748b;--badge-n-bg:#1e3a5f;--badge-n-fg:#93c5fd;--badge-b-bg:#450a0a;--badge-b-fg:#fca5a5;--badge-c-bg:#1f2937;--badge-c-fg:#9ca3af;--pc-n:#60a5fa;--pc-b:#f87171;--pc-o:#475569}\nbody.tema-verde{--bg:#f0f7f0;--fg:#1a2e1a;--nav:#1a3a1a;--nav-fg:white;--card:white;--card-b:#c6e6c6;--stat:#edf7ed;--lbl:#6b8f6b;--sep:#c6e6c6;--th:#1a3a1a;--th-fg:white;--th-hov:#2d5a2d;--row-hov:#f5fbf5;--td-b:#e0f0e0;--btn:#c6e6c6;--btn-fg:#1a3a1a;--inp-b:#c6e6c6;--inp-fg:#1a2e1a;--cnt:#6b8f6b;--badge-n-bg:#dcfce7;--badge-n-fg:#14532d;--badge-b-bg:#fef9c3;--badge-b-fg:#713f12;--badge-c-bg:#f0fdf4;--badge-c-fg:#4b5563;--pc-n:#166534;--pc-b:#92400e;--pc-o:#9ca3af}\nbody.tema-azul{--bg:#eff6ff;--fg:#1e3a8a;--nav:#1e40af;--nav-fg:white;--card:white;--card-b:#bfdbfe;--stat:#dbeafe;--lbl:#60a5fa;--sep:#bfdbfe;--th:#1e40af;--th-fg:white;--th-hov:#1d4ed8;--row-hov:#f0f9ff;--td-b:#dbeafe;--btn:#bfdbfe;--btn-fg:#1e3a8a;--inp-b:#bfdbfe;--inp-fg:#1e3a8a;--cnt:#60a5fa;--badge-n-bg:#dbeafe;--badge-n-fg:#1e3a8a;--badge-b-bg:#fef9c3;--badge-b-fg:#713f12;--badge-c-bg:#f0f9ff;--badge-c-fg:#4b5563;--pc-n:#1d4ed8;--pc-b:#dc2626;--pc-o:#94a3b8}\nbody.tema-purpura{--bg:#faf5ff;--fg:#581c87;--nav:#7c3aed;--nav-fg:white;--card:white;--card-b:#e9d5ff;--stat:#f3e8ff;--lbl:#a78bfa;--sep:#e9d5ff;--th:#7c3aed;--th-fg:white;--th-hov:#6d28d9;--row-hov:#faf5ff;--td-b:#f3e8ff;--btn:#e9d5ff;--btn-fg:#581c87;--inp-b:#e9d5ff;--inp-fg:#581c87;--cnt:#a78bfa;--badge-n-bg:#f3e8ff;--badge-n-fg:#581c87;--badge-b-bg:#fef9c3;--badge-b-fg:#713f12;--badge-c-bg:#faf5ff;--badge-c-fg:#4b5563;--pc-n:#7c3aed;--pc-b:#dc2626;--pc-o:#94a3b8}\nnav{background:var(--nav);color:var(--nav-fg);padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}\nnav a{color:#aaa;text-decoration:none;font-size:13px}\nnav a:hover{color:var(--nav-fg)}\nnav h1{font-size:15px;font-weight:600;flex:1;min-width:180px}\n.upd{font-size:12px;color:#666}\n.tema-sel{margin-left:auto;display:flex;gap:6px;align-items:center}\n.tema-sel span{font-size:11px;color:#888}\n.tema-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border .15s}\n.tema-btn:hover,.tema-btn.on{border-color:var(--nav-fg)}\n.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:16px 24px;background:var(--card);border-bottom:1px solid var(--card-b)}\n.stat{background:var(--stat);border-radius:8px;padding:10px 12px}\n.slabel{font-size:10px;color:var(--lbl);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}\n.svalue{font-size:18px;font-weight:600}\n.sv-blue{color:var(--pc-n)}.sv-red{color:var(--pc-b)}\n.controls{padding:12px 24px;background:var(--card);border-bottom:1px solid var(--card-b);display:flex;gap:8px;flex-wrap:wrap;align-items:center}\n.controls input,.controls select{border:1px solid var(--inp-b);border-radius:6px;padding:6px 10px;font-size:13px;font-family:inherit;background:var(--card);color:var(--inp-fg)}\n.controls input:focus,.controls select:focus{outline:none;border-color:var(--fg)}\n.controls input{min-width:200px}\n.sep{color:var(--sep);font-size:12px}\n.count{padding:8px 24px 0;font-size:12px;color:var(--cnt)}\n.tw{padding:12px 24px 24px;overflow-x:auto}\ntable{width:100%;border-collapse:collapse;background:var(--card);border-radius:10px;overflow:hidden;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.07)}\nthead{background:var(--th);color:var(--th-fg)}\nth{padding:10px 12px;text-align:left;font-weight:500;font-size:11px;white-space:nowrap;cursor:pointer;user-select:none}\nth:hover{background:var(--th-hov)}\nth.asc::after{content:" ↑"}th.desc::after{content:" ↓"}\ntd{padding:9px 12px;border-bottom:1px solid var(--td-b);vertical-align:middle}\ntr:last-child td{border:none}\ntr:hover td{background:var(--row-hov)}\n.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:500;white-space:nowrap}\n.bn{background:var(--badge-n-bg);color:var(--badge-n-fg)}\n.bb{background:var(--badge-b-bg);color:var(--badge-b-fg)}\n.bc{background:var(--badge-c-bg);color:var(--badge-c-fg)}\n.pm{font-weight:600}.pb{color:var(--pc-n)}.pr{color:var(--pc-b)}\n.po{font-size:11px;color:var(--pc-o);text-decoration:line-through;display:block}\n.btn-ver{display:inline-block;padding:4px 10px;border:1px solid var(--btn);border-radius:5px;font-size:11px;color:var(--btn-fg);text-decoration:none;white-space:nowrap}\n.btn-ver:hover{border-color:var(--fg);color:var(--fg)}\n.pag{padding:12px 24px;display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap}\n.pag button{padding:5px 11px;border:1px solid var(--btn);border-radius:5px;background:var(--card);cursor:pointer;font-size:13px;font-family:inherit;color:var(--fg)}\n.pag button:hover{border-color:var(--fg)}\n.pag button.on{background:var(--th);color:var(--th-fg);border-color:var(--th)}\n.pinfo{font-size:12px;color:var(--cnt);margin:0 6px}\n.empty{text-align:center;padding:40px;color:var(--cnt);font-size:13px}\n</style>\n</head>\n<body class="tema-claro">\n<nav>\n  <a href="../index.html">&#8592; Inicio</a>\n  <h1>__NOMBRE__</h1>\n  <span class="upd">Actualizado: __FECHA__</span>\n  <div class="tema-sel">\n    <span>Tema</span>\n    <div class="tema-btn on" id="tc" title="Claro" style="background:#f5f5f0" onclick="setTema(\'tema-claro\',this)"></div>\n    <div class="tema-btn" id="to" title="Oscuro" style="background:#0f1117" onclick="setTema(\'tema-oscuro\',this)"></div>\n    <div class="tema-btn" id="tv" title="Verde" style="background:#1a3a1a" onclick="setTema(\'tema-verde\',this)"></div>\n  </div>\n</nav>\n<div class="stats" id="stats"></div>\n<div class="controls">\n  <input type="text" id="q" placeholder="Buscar t\u00edtulo, ciudad...">\n  <select id="fe">\n    <option value="">Todos los estados</option>\n    <option value="NUEVO">Nuevos (hoy)</option>\n    <option value="BAJADA">Bajadas (hoy)</option>\n    <option value="conocido">Conocidos</option>\n  </select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">A\u00f1o desde</label>\n  <select id="faf"><option value="">\u2014</option></select>\n  <label style="font-size:12px;color:var(--lbl)">hasta</label>\n  <select id="fat"><option value="">\u2014</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">Precio m\u00e1x</label>\n  <select id="fpm"><option value="">\u2014</option></select>\n  <span class="sep">|</span>\n  <label style="font-size:12px;color:var(--lbl)">Km m\u00e1x</label>\n  <select id="fkm"><option value="">\u2014</option></select>\n</div>\n<div class="count" id="cnt"></div>\n<div class="tw">\n<table>\n<thead><tr>\n  <th data-c="estado">Estado</th>\n  <th data-c="titulo">T\u00edtulo</th>\n  <th data-c="precio">Precio</th>\n  <th data-c="anio">A\u00f1o</th>\n  <th data-c="kmn">Km</th>\n  <th>Combustible</th>\n  <th>Ubicaci\u00f3n</th>\n  <th data-c="fecha_detectado">Detectado</th>\n  <th></th>\n</tr></thead>\n<tbody id="tb"></tbody>\n</table>\n<p class="empty" id="emp" style="display:none">Sin resultados.</p>\n</div>\n<div class="pag" id="pag"></div>\n<script>\nconst RAW=__DATA__;\nconst PG=100;\nlet sC="precio",sD="asc",pg=0;\nfunction setTema(t,el){document.body.className=t;localStorage.setItem("as24-tema",t);document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}\n(function(){const t=localStorage.getItem("as24-tema")||"tema-claro";const map={"tema-claro":"tc","tema-oscuro":"to","tema-verde":"tv","tema-azul":"ta","tema-purpura":"tp"};document.body.className=t;const el=document.getElementById(map[t]);if(el){document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}})();\nfunction kmn(s){return s?parseInt(s.replace(/\\./g,"").replace(/[^\\d]/g,""))||0:0}\nfunction fp(n){n=parseInt(n)||0;return n?n.toLocaleString("es-ES")+" \u20ac":"\u2014"}\nconst ROWS=RAW.map(r=>({...r,precio:parseInt(r.precio)||0,precio_anterior:parseInt(r.precio_anterior)||0,kmn:kmn(r.km)}));\n(function init(){\n  const anios=[...new Set(ROWS.map(r=>r.anio).filter(Boolean))].sort();\n  ["faf","fat"].forEach(id=>{const s=document.getElementById(id);anios.forEach(a=>s.add(new Option(a,a)))});\n  const mx=Math.max(...ROWS.map(r=>r.precio),0);\n  const pm=document.getElementById("fpm");\n  [20000,25000,30000,35000,40000,45000,50000,60000,75000,100000].filter(p=>p<=mx+10000).forEach(p=>pm.add(new Option(p.toLocaleString("es-ES")+" \u20ac",p)));\n  const mxkm=Math.max(...ROWS.map(r=>r.kmn),0);\n  const fkm=document.getElementById("fkm");\n  [50000,75000,100000,125000,150000,175000,200000].filter(k=>k<=mxkm+25000).forEach(k=>fkm.add(new Option(k.toLocaleString("es-ES")+" km",k)));\n  document.querySelectorAll("th[data-c]").forEach(th=>th.addEventListener("click",()=>{const c=th.dataset.c;if(sC===c)sD=sD==="asc"?"desc":"asc";else{sC=c;sD="asc";}pg=0;render();}));\n  ["q","fe","faf","fat","fpm","fkm"].forEach(id=>{const el=document.getElementById(id);el.addEventListener(el.tagName==="INPUT"?"input":"change",()=>{pg=0;render();});});\n  const pr=ROWS.map(r=>r.precio).filter(Boolean);\n  const kms=ROWS.map(r=>r.kmn).filter(Boolean);\n  const nh=ROWS.filter(r=>(r.estado||"").includes("NUEVO")).length;\n  const bh=ROWS.filter(r=>(r.estado||"").includes("BAJADA")).length;\n  const fs=[...new Set(ROWS.map(r=>r.fecha_detectado).filter(Boolean))].sort();\n  const med=pr.length?Math.round(pr.reduce((a,b)=>a+b,0)/pr.length):0;\n  const km=kms.length?Math.round(kms.reduce((a,b)=>a+b,0)/kms.length):0;\n  document.getElementById("stats").innerHTML=[["Total",ROWS.length,""],["Precio m\u00edn",fp(Math.min(...pr)),""],["Precio medio",fp(med),""],["Precio m\u00e1x",fp(Math.max(...pr)),""],["Km medio",km?km.toLocaleString("es-ES")+" km":"\u2014",""],["Nuevos hoy",nh,"sv-blue"],["Bajadas hoy",bh,"sv-red"],["Desde",fs[0]||"\u2014",""]].map(([l,v,c])=>`<div class="stat"><div class="slabel">${l}</div><div class="svalue ${c}">${v}</div></div>`).join("");\n  render();\n})();\nfunction filt(){\n  const q=document.getElementById("q").value.toLowerCase();\n  const fe=document.getElementById("fe").value;\n  const af=document.getElementById("faf").value;\n  const at=document.getElementById("fat").value;\n  const pm=parseInt(document.getElementById("fpm").value)||0;\n  const km=parseInt(document.getElementById("fkm").value)||0;\n  return ROWS.filter(r=>{\n    if(q&&!(r.titulo||"").toLowerCase().includes(q)&&!(r.ubicacion||"").toLowerCase().includes(q))return false;\n    if(fe==="NUEVO"&&!(r.estado||"").includes("NUEVO"))return false;\n    if(fe==="BAJADA"&&!(r.estado||"").includes("BAJADA"))return false;\n    if(fe==="conocido"&&((r.estado||"").includes("NUEVO")||(r.estado||"").includes("BAJADA")))return false;\n    if(af&&(r.anio||"")<af)return false;\n    if(at&&(r.anio||"")>at)return false;\n    if(pm&&r.precio>pm)return false;\n    if(km&&r.kmn>km)return false;\n    return true;\n  });\n}\nfunction render(){\n  const rows=filt();\n  rows.sort((a,b)=>{\n    let av=a[sC],bv=b[sC];\n    if(["precio","kmn","precio_anterior"].includes(sC)){av=av||0;bv=bv||0;}\n    else if(sC==="anio"){av=parseInt(av)||0;bv=parseInt(bv)||0;}\n    else{av=(av||"").toLowerCase();bv=(bv||"").toLowerCase();}\n    return sD==="asc"?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0);\n  });\n  document.querySelectorAll("th[data-c]").forEach(th=>{th.className=th.dataset.c===sC?sD:"";});\n  const tot=rows.length,pages=Math.max(1,Math.ceil(tot/PG));\n  pg=Math.min(pg,pages-1);\n  const sl=rows.slice(pg*PG,(pg+1)*PG);\n  document.getElementById("cnt").textContent=`Mostrando ${sl.length} de ${tot} anuncios (${ROWS.length} total)`;\n  document.getElementById("tb").innerHTML=sl.map(r=>{\n    const n=(r.estado||"").includes("NUEVO"),b=(r.estado||"").includes("BAJADA");\n    const bc=n?"bn":b?"bb":"bc";\n    const bt=n?"Nuevo hoy":b?`Bajada ${r.porcentaje_bajada||""}%`:"Conocido";\n    const pc=n?`<span class="pm pb">${fp(r.precio)}</span>`:b&&r.precio_anterior?`<span class="po">${fp(r.precio_anterior)}</span><span class="pm pr">${fp(r.precio)}</span>`:`<span class="pm">${fp(r.precio)}</span>`;\n    const lk=r.url?`<a href="${r.url}" target="_blank" class="btn-ver">Ver &#8594;</a>`:"\u2014";\n    return `<tr><td><span class="badge ${bc}">${bt}</span></td><td style="max-width:220px">${r.titulo||"\u2014"}</td><td style="white-space:nowrap">${pc}</td><td>${r.anio||"\u2014"}</td><td style="white-space:nowrap">${r.km||"\u2014"}</td><td style="font-size:12px;color:var(--lbl)">${r.combustible||"\u2014"}</td><td style="font-size:12px;color:var(--lbl)">${r.ubicacion||"\u2014"}</td><td style="font-size:12px;color:var(--cnt)">${r.fecha_detectado||"\u2014"}</td><td>${lk}</td></tr>`;\n  }).join("");\n  document.getElementById("emp").style.display=tot?"none":"block";\n  const pag=document.getElementById("pag");\n  if(pages<=1){pag.innerHTML="";return;}\n  let h=`<span class="pinfo">${tot} resultados</span>`;\n  const fr=Math.max(0,pg-2),to=Math.min(pages-1,pg+2);\n  if(fr>0)h+=`<button onclick="pg=0;render()">1</button>${fr>1?\'<span class="pinfo">\u2026</span>\':\'\'}`;\n  for(let i=fr;i<=to;i++)h+=`<button class="${i===pg?"on":""}" onclick="pg=${i};render()">${i+1}</button>`;\n  if(to<pages-1)h+=`${to<pages-2?\'<span class="pinfo">\u2026</span>\':\'\'}`;\n  pag.innerHTML=h;\n}\n</script>\n</body>\n</html>'
 )
 
 _HTML_INDEX = (
-'<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>AutoScout24 Monitor</title>\n<!-- v7 (2026-05-21) -->\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:\'IBM Plex Sans\',system-ui,sans-serif;min-height:100vh;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}\n/* ── TEMAS ── */\nbody.tema-claro{--bg:#f5f5f0;--fg:#1a1a1a;--hdr:#1a1a1a;--hdr-fg:white;--card:#fff;--card-b:#ebebeb;--stat-bg:#f9f9f7;--stat-fg:#1a1a1a;--lbl:#aaa;--val:#1a1a1a;--val-blue:#1e40af;--val-red:#991b1b}\nbody.tema-oscuro{--bg:#0f1117;--fg:#e2e8f0;--hdr:#1e2433;--hdr-fg:#e2e8f0;--card:#1e2433;--card-b:#2d3748;--stat-bg:#161b27;--stat-fg:#e2e8f0;--lbl:#64748b;--val:#e2e8f0;--val-blue:#60a5fa;--val-red:#f87171}\nbody.tema-verde{--bg:#f0f7f0;--fg:#1a2e1a;--hdr:#1a3a1a;--hdr-fg:white;--card:#fff;--card-b:#c6e6c6;--stat-bg:#edf7ed;--stat-fg:#1a2e1a;--lbl:#6b8f6b;--val:#1a2e1a;--val-blue:#166534;--val-red:#92400e}\nbody.tema-azul{--bg:#eff6ff;--fg:#1e3a8a;--hdr:#1e40af;--hdr-fg:white;--card:#fff;--card-b:#bfdbfe;--stat-bg:#dbeafe;--stat-fg:#1e3a8a;--lbl:#60a5fa;--val:#1e3a8a;--val-blue:#1d4ed8;--val-red:#dc2626}\nbody.tema-purpura{--bg:#faf5ff;--fg:#581c87;--hdr:#7c3aed;--hdr-fg:white;--card:#fff;--card-b:#e9d5ff;--stat-bg:#f3e8ff;--stat-fg:#581c87;--lbl:#a78bfa;--val:#581c87;--val-blue:#7c3aed;--val-red:#dc2626}\nheader{background:var(--hdr);color:var(--hdr-fg);padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}\nheader h1{font-size:18px;font-weight:600;flex:1;min-width:200px}\nheader p{font-size:13px;opacity:.7;margin-top:4px}\n.tema-sel{display:flex;gap:6px;align-items:center;margin-left:auto}\n.tema-sel span{font-size:11px;opacity:.7}\n.tema-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border .15s}\n.tema-btn:hover,.tema-btn.on{border-color:var(--hdr-fg)}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}\na.card{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid var(--card-b);text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}\na.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}\n.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:var(--fg)}\n.cs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}\n.c{background:var(--stat-bg);border-radius:7px;padding:8px 10px}\n.cl{font-size:10px;color:var(--lbl);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}\n.cv{font-size:17px;font-weight:600;color:var(--stat-fg)}\n.cvb{color:var(--val-blue)}.cvr{color:var(--val-red)}\n.cf{font-size:11px;color:var(--lbl);border-top:1px solid var(--card-b);padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}\n.cf span{color:var(--val);font-weight:500;font-size:12px}\n</style>\n</head>\n<body class="tema-claro">\n<header>\n  <div>\n    <h1>AutoScout24 Monitor</h1>\n    <p>Actualizado: __FECHA__</p>\n  </div>\n  <div class="tema-sel">\n    <span>Tema</span>\n    <div class="tema-btn on" id="tc" title="Claro" style="background:#f5f5f0" onclick="setTema(\'tema-claro\',this)"></div>\n    <div class="tema-btn" id="to" title="Oscuro" style="background:#0f1117" onclick="setTema(\'tema-oscuro\',this)"></div>\n    <div class="tema-btn" id="tv" title="Verde" style="background:#1a3a1a" onclick="setTema(\'tema-verde\',this)"></div>\n    <div class="tema-btn" id="ta" title="Azul" style="background:#1e40af" onclick="setTema(\'tema-azul\',this)"></div>\n    <div class="tema-btn" id="tp" title="Púrpura" style="background:#7c3aed" onclick="setTema(\'tema-purpura\',this)"></div>\n  </div>\n</header>\n<div class="grid">__CARDS__</div>\n<script>\nfunction setTema(t,el){document.body.className=t;localStorage.setItem("as24-tema",t);document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}\n(function(){const t=localStorage.getItem("as24-tema")||"tema-claro";const map={"tema-claro":"tc","tema-oscuro":"to","tema-verde":"tv","tema-azul":"ta","tema-purpura":"tp"};document.body.className=t;const el=document.getElementById(map[t]);if(el){document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}})();\n</script>\n</body>\n</html>'
+'<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>AutoScout24 Monitor</title>\n<!-- v7 (2026-05-22) -->\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:\'IBM Plex Sans\',system-ui,sans-serif;min-height:100vh;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}\n/* ── TEMAS ── */\nbody.tema-claro{--bg:#f5f5f0;--fg:#1a1a1a;--hdr:#1a1a1a;--hdr-fg:white;--card:#fff;--card-b:#ebebeb;--stat-bg:#f9f9f7;--stat-fg:#1a1a1a;--lbl:#aaa;--val:#1a1a1a;--val-blue:#1e40af;--val-red:#991b1b}\nbody.tema-oscuro{--bg:#0f1117;--fg:#e2e8f0;--hdr:#1e2433;--hdr-fg:#e2e8f0;--card:#1e2433;--card-b:#2d3748;--stat-bg:#161b27;--stat-fg:#e2e8f0;--lbl:#64748b;--val:#e2e8f0;--val-blue:#60a5fa;--val-red:#f87171}\nbody.tema-verde{--bg:#f0f7f0;--fg:#1a2e1a;--hdr:#1a3a1a;--hdr-fg:white;--card:#fff;--card-b:#c6e6c6;--stat-bg:#edf7ed;--stat-fg:#1a2e1a;--lbl:#6b8f6b;--val:#1a2e1a;--val-blue:#166534;--val-red:#92400e}\nbody.tema-azul{--bg:#eff6ff;--fg:#1e3a8a;--hdr:#1e40af;--hdr-fg:white;--card:#fff;--card-b:#bfdbfe;--stat-bg:#dbeafe;--stat-fg:#1e3a8a;--lbl:#60a5fa;--val:#1e3a8a;--val-blue:#1d4ed8;--val-red:#dc2626}\nbody.tema-purpura{--bg:#faf5ff;--fg:#581c87;--hdr:#7c3aed;--hdr-fg:white;--card:#fff;--card-b:#e9d5ff;--stat-bg:#f3e8ff;--stat-fg:#581c87;--lbl:#a78bfa;--val:#581c87;--val-blue:#7c3aed;--val-red:#dc2626}\nheader{background:var(--hdr);color:var(--hdr-fg);padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}\nheader h1{font-size:18px;font-weight:600;flex:1;min-width:200px}\nheader p{font-size:13px;opacity:.7;margin-top:4px}\n.tema-sel{display:flex;gap:6px;align-items:center;margin-left:auto}\n.tema-sel span{font-size:11px;opacity:.7}\n.tema-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border .15s}\n.tema-btn:hover,.tema-btn.on{border-color:var(--hdr-fg)}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}\na.card{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid var(--card-b);text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}\na.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}\n.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:var(--fg)}\n.cs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}\n.c{background:var(--stat-bg);border-radius:7px;padding:8px 10px}\n.cl{font-size:10px;color:var(--lbl);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}\n.cv{font-size:17px;font-weight:600;color:var(--stat-fg)}\n.cvb{color:var(--val-blue)}.cvr{color:var(--val-red)}\n.cf{font-size:11px;color:var(--lbl);border-top:1px solid var(--card-b);padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}\n.cf span{color:var(--val);font-weight:500;font-size:12px}\n</style>\n</head>\n<body class="tema-claro">\n<header>\n  <div>\n    <h1>AutoScout24 Monitor</h1>\n    <p>Actualizado: __FECHA__</p>\n  </div>\n  <div class="tema-sel">\n    <span>Tema</span>\n    <div class="tema-btn on" id="tc" title="Claro" style="background:#f5f5f0" onclick="setTema(\'tema-claro\',this)"></div>\n    <div class="tema-btn" id="to" title="Oscuro" style="background:#0f1117" onclick="setTema(\'tema-oscuro\',this)"></div>\n    <div class="tema-btn" id="tv" title="Verde" style="background:#1a3a1a" onclick="setTema(\'tema-verde\',this)"></div>\n    <div class="tema-btn" id="ta" title="Azul" style="background:#1e40af" onclick="setTema(\'tema-azul\',this)"></div>\n    <div class="tema-btn" id="tp" title="Púrpura" style="background:#7c3aed" onclick="setTema(\'tema-purpura\',this)"></div>\n  </div>\n</header>\n<div class="grid">__CARDS__</div>\n<script>\nfunction setTema(t,el){document.body.className=t;localStorage.setItem("as24-tema",t);document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}\n(function(){const t=localStorage.getItem("as24-tema")||"tema-claro";const map={"tema-claro":"tc","tema-oscuro":"to","tema-verde":"tv","tema-azul":"ta","tema-purpura":"tp"};document.body.className=t;const el=document.getElementById(map[t]);if(el){document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}})();\n</script>\n</body>\n</html>'
 )
 
 
@@ -1183,120 +1247,6 @@ _HTML_INDEX = (
 #  VERIFICACIÓN ANUNCIOS ACTIVOS (limpieza de URLs muertas)
 # ══════════════════════════════════════════════════════════════
 
-def verificar_anuncios_activos(filas_hist: list[dict]) -> list[dict]:
-    """Verifica cada URL con técnicas anti-detección para evitar bloqueos.
-    Retorna la lista actualizada sin los anuncios eliminados."""
-    if not filas_hist:
-        return []
-    
-    activos = []
-    eliminados = []
-    
-    # User agents reales y variados
-    user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15",
-    ]
-    
-    for idx, fila in enumerate(filas_hist):
-        url = fila.get("url", "")
-        if not url:
-            activos.append(fila)
-            continue
-        
-        # Rotar User-Agent
-        ua = user_agents[idx % len(user_agents)]
-        
-        # Headers más completos para parecer navegador real
-        headers = {
-            "User-Agent": ua,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-            "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
-            "Accept-Encoding": "gzip, deflate, br",
-            "DNT": "1",
-            "Connection": "keep-alive",
-            "Upgrade-Insecure-Requests": "1",
-            "Sec-Fetch-Dest": "document",
-            "Sec-Fetch-Mode": "navigate",
-            "Sec-Fetch-Site": "none",
-            "Cache-Control": "max-age=0",
-        }
-        
-        try:
-            r = requests.get(url, timeout=15, headers=headers, allow_redirects=True)
-            
-            # 200 OK - revisar contenido
-            if r.status_code == 200:
-                texto_lower = r.text.lower()
-                # Buscar múltiples indicadores de "no disponible"
-                indicadores_no_disponible = [
-                    "este vehículo ya no está disponible",
-                    "this vehicle is no longer available",
-                    "dieses fahrzeug ist nicht mehr verfügbar",
-                    "vehicle has been sold",
-                    "fahrzeug wurde verkauft",
-                    "vehículo vendido",
-                    "no longer online",
-                    "nicht mehr online",
-                ]
-                
-                if any(ind in texto_lower for ind in indicadores_no_disponible):
-                    eliminados.append(fila.get("id", url[:30]))
-                    log.info(f"  Anuncio eliminado (no disponible): {fila.get('titulo', '')[:50]}")
-                else:
-                    # Verificar que tiene contenido real del anuncio
-                    tiene_precio = any(x in texto_lower for x in ["price", "precio", "preis", "€", "eur"])
-                    if tiene_precio:
-                        activos.append(fila)
-                    else:
-                        # Página extraña, mantener por seguridad
-                        activos.append(fila)
-                        log.debug(f"  Anuncio mantenido (sin precio visible): {fila.get('titulo', '')[:50]}")
-            
-            # 404 - claramente eliminado
-            elif r.status_code == 404:
-                eliminados.append(fila.get("id", url[:30]))
-                log.info(f"  Anuncio eliminado (404): {fila.get('titulo', '')[:50]}")
-            
-            # 403, 429, 503 - posible bloqueo, mantener el anuncio
-            elif r.status_code in (403, 429, 503):
-                activos.append(fila)
-                log.warning(f"  HTTP {r.status_code} en {url[:50]} - manteniendo anuncio por seguridad")
-                # Aumentar pausa si detectamos bloqueo
-                time.sleep(2)
-            
-            # Otros códigos - mantener por seguridad
-            else:
-                activos.append(fila)
-                log.debug(f"  HTTP {r.status_code} - manteniendo: {fila.get('titulo', '')[:50]}")
-                
-        except requests.exceptions.Timeout:
-            # Timeout - mantener el anuncio
-            activos.append(fila)
-            log.debug(f"  Timeout verificando {url[:40]} - manteniendo")
-        except Exception as e:
-            # Cualquier error - mantener el anuncio por seguridad
-            activos.append(fila)
-            log.debug(f"  Error verificando {url[:40]}: {e}")
-        
-        # Pausa de 2 segundos entre requests + variación aleatoria
-        import random
-        pausa = 2.0 + random.uniform(0, 1.0)  # 2-3 segundos
-        time.sleep(pausa)
-        
-        # Log de progreso cada 20 anuncios
-        if (idx + 1) % 20 == 0:
-            log.info(f"  Progreso verificación: {idx + 1}/{len(filas_hist)} anuncios verificados")
-    
-    if eliminados:
-        log.info(f"Anuncios eliminados (no disponibles): {len(eliminados)}/{len(filas_hist)}")
-    else:
-        log.info(f"Verificación completa: {len(activos)} anuncios activos, 0 eliminados")
-    
-    return activos
 
 
 def generar_html_busqueda(nombre: str, filas: list[dict], nuevos: list, bajadas: list, fecha: str) -> str:
@@ -1782,72 +1732,24 @@ def main():
             # 5. Guardar estado compacto
             guardar_estado(nombre, anuncios)
 
-            # 6. Leer histórico completo de Sheets
+            # 6. Leer histórico completo de Sheets (para dashboard y CSV)
             filas_hist = leer_hoja_completa(nombre)
-            
-            # 6b. Fallback: si Sheets está vacío, usar los anuncios actuales del scraping
-            if not filas_hist:
-                log.warning(f"[{nombre}] Sheets vacío - usando anuncios del scraping actual como fallback")
-                filas_hist = []
-                for a in anuncios:
-                    filas_hist.append({
-                        "id": a.get("id", ""),
-                        "titulo": a.get("titulo", ""),
-                        "precio": str(a.get("precio", "")),
-                        "precio_anterior": "",
-                        "porcentaje_bajada": "",
-                        "anio": a.get("anio", ""),
-                        "km": a.get("km", ""),
-                        "combustible": a.get("combustible", ""),
-                        "ubicacion": a.get("ubicacion", ""),
-                        "estado": "🆕 NUEVO" if a.get("id") in [n.get("id") for n in nuevos] else "conocido",
-                        "fecha_detectado": date.today().isoformat(),
-                        "url": a.get("url", ""),
-                    })
-                log.info(f"[{nombre}] Fallback: {len(filas_hist)} anuncios del scraping actual")
-            
-            # 7. Verificar anuncios activos con técnicas anti-detección mejoradas
-            log.info(f"[{nombre}] Verificando disponibilidad de anuncios (con anti-detección)...")
-            filas_hist_limpias = verificar_anuncios_activos(filas_hist)
-            
-            # 7b. Limpieza de Sheets cada lunes (elimina anuncios no disponibles)
-            es_lunes = datetime.now().weekday() == 0
-            if es_lunes and len(filas_hist_limpias) < len(filas_hist):
-                log.info(f"[{nombre}] Limpieza automática (lunes): eliminando {len(filas_hist) - len(filas_hist_limpias)} anuncios no disponibles de Sheets")
-                try:
-                    sp = conectar_sheets()
-                    ws = sp.worksheet(nombre[:50])
-                    ws.clear()
-                    if filas_hist_limpias:
-                        # Reconstruir filas para Sheets
-                        filas_sheets = [CABECERAS]
-                        for f in filas_hist_limpias:
-                            fila_datos = [
-                                f.get("id",""), f.get("titulo",""), f.get("precio",""),
-                                f.get("precio_anterior",""), "", "",
-                                f.get("anio",""), f.get("km",""), f.get("combustible",""),
-                                f.get("ubicacion",""), f.get("estado",""), 
-                                f.get("fecha_detectado",""), f.get("url","")
-                            ]
-                            filas_sheets.append(fila_datos)
-                        ws.update(filas_sheets, "A1")
-                        log.info(f"[{nombre}] Sheets limpiado: {len(filas_hist) - len(filas_hist_limpias)} anuncios eliminados")
-                except Exception as e:
-                    log.error(f"[{nombre}] Error limpiando Sheets: {e}")
-            elif es_lunes:
-                log.info(f"[{nombre}] Limpieza lunes: todos los anuncios están activos")
-            
-            # Usar anuncios activos para email y dashboard
-            filas_hist = filas_hist_limpias
 
-            # 8. Email independiente por búsqueda + adjuntos (con filas activas)
+            # 6b. Marcar como inactivos los anuncios que no han aparecido en 7+ días
+            ids_actuales = {a["id"] for a in anuncios}
+            marcar_inactivos_7dias(nombre, ids_actuales)
+
+            # 6c. Releer después de marcar inactivos para tener datos actualizados
+            filas_hist = leer_hoja_completa(nombre)
+
+            # 7. Email independiente por búsqueda + adjuntos
             adjuntar_hoja = b.get("adjuntar_hoja_calculo", False)
             enviar_email_busqueda(
                 nombre, nuevos, bajadas, url_sheets,
                 filas_hist=filas_hist, adjuntar_hoja=adjuntar_hoja
             )
 
-            # 10. Preparar datos para el dashboard HTML
+            # 8. Preparar datos para el dashboard HTML
             slug = _slug(nombre)
             paginas_html[f"busquedas/{slug}.html"] = generar_html_busqueda(
                 nombre, filas_hist, nuevos, bajadas, date.today().isoformat()
@@ -1892,5 +1794,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
 
 
