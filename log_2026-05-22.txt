@@ -1,405 +1,409 @@
-2026-05-22 09:40:22 [INFO    ] main                         — ════════════════════════════════════════════════════════════
-2026-05-22 09:40:22 [INFO    ] main                         — AutoScout24 Agent — INICIO 2026-05-22 09:40:22
-2026-05-22 09:40:22 [INFO    ] main                         — ════════════════════════════════════════════════════════════
-2026-05-22 09:40:22 [INFO    ] main                         — Búsquedas activas: 2
-2026-05-22 09:40:22 [INFO    ] main                         — ════════════════════════════════════════════════════════════
-2026-05-22 09:40:22 [INFO    ] main                         — BÚSQUEDA 1/2: Mercedes GLC - España
-2026-05-22 09:40:22 [INFO    ] main                         — ════════════════════════════════════════════════════════════
-2026-05-22 09:40:22 [DEBUG   ] obtener_credenciales_google  — Credenciales Google en temporal: /tmp/tmp85c7zhq6.json
-2026-05-22 09:40:23 [DEBUG   ] conectar_sheets              — Hoja 'AutoScout24 Monitor' encontrada
-2026-05-22 09:40:23 [INFO    ] cargar_estado                — [Mercedes GLC - España] Estado cargado — 160 anuncios conocidos
-2026-05-22 09:40:23 [INFO    ] scrape_busqueda              — Buscando: mercedes-benz glc-220 | ES | hasta:35000 | año desde:2017 | año hasta:2021 | km hasta:100000
-2026-05-22 09:40:23 [INFO    ] scrape_busqueda              — ── Página 1/10
-2026-05-22 09:40:23 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=1&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:24 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 619,609 bytes
-2026-05-22 09:40:24 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:24 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:27 [INFO    ] scrape_busqueda              — ── Página 2/10
-2026-05-22 09:40:27 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=2&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:27 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 624,712 bytes
-2026-05-22 09:40:28 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:28 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:31 [INFO    ] scrape_busqueda              — ── Página 3/10
-2026-05-22 09:40:31 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=3&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:31 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 648,473 bytes
-2026-05-22 09:40:31 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:31 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:34 [INFO    ] scrape_busqueda              — ── Página 4/10
-2026-05-22 09:40:34 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=4&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:35 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 652,752 bytes
-2026-05-22 09:40:35 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:35 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:38 [INFO    ] scrape_busqueda              — ── Página 5/10
-2026-05-22 09:40:38 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=5&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:38 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 645,930 bytes
-2026-05-22 09:40:38 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:38 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:41 [INFO    ] scrape_busqueda              — ── Página 6/10
-2026-05-22 09:40:41 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=6&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:42 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 632,946 bytes
-2026-05-22 09:40:42 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:42 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:45 [INFO    ] scrape_busqueda              — ── Página 7/10
-2026-05-22 09:40:45 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=7&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:45 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 640,122 bytes
-2026-05-22 09:40:45 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:45 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:48 [INFO    ] scrape_busqueda              — ── Página 8/10
-2026-05-22 09:40:48 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=8&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:49 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 548,807 bytes
-2026-05-22 09:40:49 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:40:49 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:40:52 [INFO    ] scrape_busqueda              — ── Página 9/10
-2026-05-22 09:40:52 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=9&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:40:52 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 359,682 bytes
-2026-05-22 09:40:52 [DEBUG   ] extraer_desde_next_data      — No se encontraron listings en __NEXT_DATA__
-2026-05-22 09:40:52 [DEBUG   ] extraer_desde_css            — CSS fallback: 0 cards encontradas
-2026-05-22 09:40:52 [INFO    ] obtener_anuncios_pagina      —   CSS:  0 anuncios
-2026-05-22 09:40:52 [INFO    ] scrape_busqueda              —   Página vacía — fin del scraping
-2026-05-22 09:40:52 [INFO    ] scrape_busqueda              — Scraping completado — 159 anuncios únicos (1 duplicados eliminados)
-2026-05-22 09:40:52 [INFO    ] detectar_cambios             —   Cambios: 12 nuevos | 0 bajadas de precio
-2026-05-22 09:40:53 [INFO    ] actualizar_sheets_busqueda   —   Sheets 'Mercedes GLC - España': +159 nuevas, 0 actualizadas
-2026-05-22 09:40:54 [INFO    ] actualizar_sheets_busqueda   —   Hoja del día: 12 entradas
-2026-05-22 09:40:54 [DEBUG   ] guardar_estado               — [Mercedes GLC - España] Estado JSON: 8905 chars para 159 anuncios
-2026-05-22 09:40:54 [INFO    ] guardar_estado               — [Mercedes GLC - España] Estado guardado — 159 anuncios
-2026-05-22 09:40:54 [INFO    ] leer_hoja_completa           — [Mercedes GLC - España] Histórico leído: 159 anuncios de Sheets
-2026-05-22 09:40:54 [INFO    ] main                         — [Mercedes GLC - España] Verificando disponibilidad de anuncios...
-2026-05-22 09:40:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:40:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:40:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:40:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:40:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:40:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:40:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:00 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC AMG Line
-2026-05-22 09:41:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:30 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
-2026-05-22 09:41:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
-2026-05-22 09:41:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:44 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:47 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:41:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:00 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
-2026-05-22 09:42:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
-2026-05-22 09:42:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
-2026-05-22 09:42:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
-2026-05-22 09:42:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:12 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
-2026-05-22 09:42:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC AMG LINE con TECHO 
-2026-05-22 09:42:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:30 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
-2026-05-22 09:42:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
-2026-05-22 09:42:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
-2026-05-22 09:42:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic (EURO 6d)
-2026-05-22 09:42:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
-2026-05-22 09:42:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC Coupé 220d 4Matic Aut.
-2026-05-22 09:42:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
-2026-05-22 09:42:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
-2026-05-22 09:42:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
-2026-05-22 09:42:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
-2026-05-22 09:42:44 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
-2026-05-22 09:42:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220d 4Matic Aut.
-2026-05-22 09:42:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:47 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
-2026-05-22 09:42:53 [INFO    ] verificar_anuncios_activos   — Anuncios eliminados (no disponibles): 159
-2026-05-22 09:42:54 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - España] Email enviado a 1 destinatario(s): ant.rivas@gmail.com
-2026-05-22 09:42:54 [INFO    ] main                         — ════════════════════════════════════════════════════════════
-2026-05-22 09:42:54 [INFO    ] main                         — BÚSQUEDA 2/2: Mercedes GLC - Alemania
-2026-05-22 09:42:54 [INFO    ] main                         — ════════════════════════════════════════════════════════════
-2026-05-22 09:42:55 [INFO    ] cargar_estado                — [Mercedes GLC - Alemania] Estado cargado — 119 anuncios conocidos
-2026-05-22 09:42:55 [INFO    ] scrape_busqueda              — Buscando: mercedes-benz glc-220 | DE | hasta:35000 | año desde:2017 | año hasta:2021 | km hasta:100000
-2026-05-22 09:42:55 [INFO    ] scrape_busqueda              — ── Página 1/10
-2026-05-22 09:42:55 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=1&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:42:55 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 611,654 bytes
-2026-05-22 09:42:55 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:42:55 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:42:58 [INFO    ] scrape_busqueda              — ── Página 2/10
-2026-05-22 09:42:58 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=2&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:42:58 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 609,360 bytes
-2026-05-22 09:42:58 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:42:58 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:43:01 [INFO    ] scrape_busqueda              — ── Página 3/10
-2026-05-22 09:43:01 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=3&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:43:02 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 611,553 bytes
-2026-05-22 09:43:02 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:43:02 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:43:05 [INFO    ] scrape_busqueda              — ── Página 4/10
-2026-05-22 09:43:05 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=4&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:43:05 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 625,704 bytes
-2026-05-22 09:43:05 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:43:05 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:43:08 [INFO    ] scrape_busqueda              — ── Página 5/10
-2026-05-22 09:43:08 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=5&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:43:08 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 625,869 bytes
-2026-05-22 09:43:08 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:43:08 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:43:11 [INFO    ] scrape_busqueda              — ── Página 6/10
-2026-05-22 09:43:11 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=6&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:43:12 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 523,213 bytes
-2026-05-22 09:43:12 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
-2026-05-22 09:43:12 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
-2026-05-22 09:43:15 [INFO    ] scrape_busqueda              — ── Página 7/10
-2026-05-22 09:43:15 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=7&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
-2026-05-22 09:43:15 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 359,732 bytes
-2026-05-22 09:43:15 [DEBUG   ] extraer_desde_next_data      — No se encontraron listings en __NEXT_DATA__
-2026-05-22 09:43:15 [DEBUG   ] extraer_desde_css            — CSS fallback: 0 cards encontradas
-2026-05-22 09:43:15 [INFO    ] obtener_anuncios_pagina      —   CSS:  0 anuncios
-2026-05-22 09:43:15 [INFO    ] scrape_busqueda              —   Página vacía — fin del scraping
-2026-05-22 09:43:15 [INFO    ] scrape_busqueda              — Scraping completado — 118 anuncios únicos (2 duplicados eliminados)
-2026-05-22 09:43:15 [INFO    ] detectar_cambios             —   Cambios: 7 nuevos | 0 bajadas de precio
-2026-05-22 09:43:16 [INFO    ] actualizar_sheets_busqueda   —   Sheets 'Mercedes GLC - Alemania': +118 nuevas, 0 actualizadas
-2026-05-22 09:43:17 [INFO    ] actualizar_sheets_busqueda   —   Hoja del día: 7 entradas
-2026-05-22 09:43:17 [DEBUG   ] guardar_estado               — [Mercedes GLC - Alemania] Estado JSON: 6609 chars para 118 anuncios
-2026-05-22 09:43:17 [INFO    ] guardar_estado               — [Mercedes GLC - Alemania] Estado guardado — 118 anuncios
-2026-05-22 09:43:17 [INFO    ] leer_hoja_completa           — [Mercedes GLC - Alemania] Histórico leído: 118 anuncios de Sheets
-2026-05-22 09:43:17 [INFO    ] main                         — [Mercedes GLC - Alemania] Verificando disponibilidad de anuncios...
-2026-05-22 09:43:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic LED+NAVI+SH
-2026-05-22 09:43:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic (253.905)
-2026-05-22 09:43:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC GLC 220 d 4Matic nur 48 
-2026-05-22 09:43:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G-TRONIC
-2026-05-22 09:43:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*LED*AMG-Interieur*A
-2026-05-22 09:43:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d Exclusive 4Matic L
-2026-05-22 09:43:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G-TRONIC
-2026-05-22 09:43:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED/Alcantara/AMG I
-2026-05-22 09:43:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 2.1*Kamera*Navi*PDC*SHZ*Te
-2026-05-22 09:43:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 4Matic Exclusive Aut
-2026-05-22 09:43:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 4Matic Exclusive Aut
-2026-05-22 09:43:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4MATIC LED+AHK+COM
-2026-05-22 09:43:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*9G-Tron*Navi*R.Kam*
-2026-05-22 09:43:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 4M AMG NIGHT PANORAM
-2026-05-22 09:43:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic "NAVI-CAM-LEDER-SIT
-2026-05-22 09:43:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Garantie* 1.Hand*
-2026-05-22 09:43:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M+AMG+DISTRONIC+Kamera+AH
-2026-05-22 09:43:30 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic*STHZ*SHZ*NAVI*KAMERA*
-2026-05-22 09:43:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC Exclusive
-2026-05-22 09:43:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC AMG Panorama TWA IH
-2026-05-22 09:43:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG 360 Kamera
-2026-05-22 09:43:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED Navi Kamera Led
-2026-05-22 09:43:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic *AMG*NAVI*SHZ*KAMER
-2026-05-22 09:43:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/COUPE/ALLRAD/AHK/AU
-2026-05-22 09:43:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/LED-Schein/Leder/Al
-2026-05-22 09:43:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC -Klasse GLC 220 d 4Matic
-2026-05-22 09:43:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AMG+Burmester+HUD+Kamer
-2026-05-22 09:43:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d EXCLUSIVE 4M KAMERA MBUX P
-2026-05-22 09:43:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d EXCLUSIVE 4M KAMERA MBUX P
-2026-05-22 09:43:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220d 4M 9G-Aut/LED/Pano/3
-2026-05-22 09:43:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 D 4MATIC ACC MASSAGE 360° LA
-2026-05-22 09:43:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
-2026-05-22 09:43:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.*LED*NAVI*TEMPO
-2026-05-22 09:43:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.*LED*NAVI*TEMPO
-2026-05-22 09:43:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M Night+LED+Kam+Adv.Sound
-2026-05-22 09:43:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut., 2.Hand, Wenig
-2026-05-22 09:43:44 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d AMG Pano LEDER 19-Alu LED 
-2026-05-22 09:43:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*AMG Line*8-Fach*Amb
-2026-05-22 09:43:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line AHK,AUTOM.
-2026-05-22 09:43:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AHK DISTRONIC LED Kamer
-2026-05-22 09:43:47 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AMG+AHK+Pano+Totw+Kamer
-2026-05-22 09:43:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic ALLRAD|AMG-LINE|STY
-2026-05-22 09:43:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*LED*Kamera*DTacho*
-2026-05-22 09:43:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED Leder Navi Kame
-2026-05-22 09:43:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d Coupe 4Matic 9G-TR
-2026-05-22 09:43:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d Exclusive Pano*LED*Offroad
-2026-05-22 09:43:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 LED AMG AHK Standheizung Sou
-2026-05-22 09:43:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*AMG-LINE*ALCANTARA*
-2026-05-22 09:43:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 9G 4M *PANO*LED*SHZ*CARPLA
-2026-05-22 09:43:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AHK "Junge Sterne"
-2026-05-22 09:43:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d AMG 4M Rü-Ka AHK LED SHZ N
-2026-05-22 09:43:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4M-AssiP BusiP Kom
-2026-05-22 09:43:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M 9G-DCT Exclusive *LED*e
-2026-05-22 09:43:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC AMG Line
-2026-05-22 09:43:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line*PANO*AHK*L
-2026-05-22 09:43:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AMG-Line *AHK*PAN*SHZ*N
-2026-05-22 09:43:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d Coupe 4Matic 9G-TR
-2026-05-22 09:43:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC Diesel d 4Matic 9G-TRONI
-2026-05-22 09:44:00 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
-2026-05-22 09:44:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
-2026-05-22 09:44:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M EXCLUSIVE*LED*NAVI*KAME
-2026-05-22 09:44:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 Coupe 4M AMG NIGHT H
-2026-05-22 09:44:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic / 1.Hd / MBUX / Kam
-2026-05-22 09:44:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic, 360° Kamera, Head 
-2026-05-22 09:44:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Aut.*LED*N
-2026-05-22 09:44:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Aut.*LED*N
-2026-05-22 09:44:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 AMG Line
-2026-05-22 09:44:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M *AMG Night Distronic AH
-2026-05-22 09:44:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED NAVI KAMERA PDC
-2026-05-22 09:44:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220d 4M*AMG-Line*Dis+*360
-2026-05-22 09:44:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 9G-Tronic 4Matic,ACC,Leder,K
-2026-05-22 09:44:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M Coupe Navi-LED-Kamera-2
-2026-05-22 09:44:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M+Memory+Head-up+AHK+360G
-2026-05-22 09:44:12 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic Leder/Tem
-2026-05-22 09:44:12 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 DIESEL*LED*AHK*1.HAND*NIGHT*
-2026-05-22 09:44:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC d 4Matic - Facelift - Pa
-2026-05-22 09:44:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AHK KAMERA SPUR PDC SHZ
-2026-05-22 09:44:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G-TRONIC -
-2026-05-22 09:44:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic*SHZ*KLIMA*EURO6*NAVİ*
-2026-05-22 09:44:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
-2026-05-22 09:44:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
-2026-05-22 09:44:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AUT. AMG-Line
-2026-05-22 09:44:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Klima/ Leder/ LED/ 
-2026-05-22 09:44:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC Aut. Facelift NAV/1
-2026-05-22 09:44:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AUT Kam. KeyLess KlimaA
-2026-05-22 09:44:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic GLC Amg line 360 Ka
-2026-05-22 09:44:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line/LED/Distro
-2026-05-22 09:44:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Pano/AHK/M
-2026-05-22 09:44:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220d 4M AMG* MULTIBEAM#SH
-2026-05-22 09:44:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC
-2026-05-22 09:44:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC
-2026-05-22 09:44:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 D AMG LINE 4MATIC NIGHT BURM
-2026-05-22 09:44:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic (253.915)
-2026-05-22 09:44:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Aut.*LED*T
-2026-05-22 09:44:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic | LED | AHK | Glasd
-2026-05-22 09:44:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220 d 4M AMG LINE Exter. 
-2026-05-22 09:44:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic Aut.*NAV*AC
-2026-05-22 09:44:30 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic Aut.*NAV*AC
-2026-05-22 09:44:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Ma.*PANO*LED-360°-KEYLESS
-2026-05-22 09:44:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M 9G-TRON AMG Line *LED*P
-2026-05-22 09:44:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC Coupé AMG DISTRO 36
-2026-05-22 09:44:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG-Line *Alcantara
-2026-05-22 09:44:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M 9G AMG Line LED *Garant
-2026-05-22 09:44:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic AMG Distr
-2026-05-22 09:44:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC Exclusive
-2026-05-22 09:44:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*Burmester*Pano*Sitz
-2026-05-22 09:44:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line *Led-AHK-N
-2026-05-22 09:44:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG
-2026-05-22 09:44:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic (253.905)
-2026-05-22 09:44:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupe AMG Line Head Up AHK
-2026-05-22 09:44:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG AHK°ACC°PANO°KA
-2026-05-22 09:44:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/PANO/VOLL!/ACC/MEMO
-2026-05-22 09:44:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d AMG LINE 4MATIC 360°Kamera
-2026-05-22 09:44:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/9G/2xAMG-Line/Distr
-2026-05-22 09:44:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G AHK Sthz
-2026-05-22 09:44:44 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic *AHK/AIRMATIC/SPURP
-2026-05-22 09:44:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 2xAMG-Line |Night-P
-2026-05-22 09:44:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic+LED+NAVI+PDC+KLIMAA
-2026-05-22 09:44:46 [INFO    ] verificar_anuncios_activos   — Anuncios eliminados (no disponibles): 118
-2026-05-22 09:44:47 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - Alemania] Email enviado a 1 destinatario(s): ant.rivas@gmail.com
-2026-05-22 09:44:47 [INFO    ] main                         — ════════════════════════════════════════════════════════════
-2026-05-22 09:44:47 [INFO    ] main                         — Generando y publicando dashboard en GitHub Pages...
-2026-05-22 09:44:48 [DEBUG   ] publicar_github_pages        — gh-pages: busquedas/mercedes-glc-espana.html publicado
-2026-05-22 09:44:49 [DEBUG   ] publicar_github_pages        — gh-pages: busquedas/mercedes-glc-alemania.html publicado
-2026-05-22 09:44:50 [DEBUG   ] publicar_github_pages        — gh-pages: index.html publicado
-2026-05-22 09:44:52 [DEBUG   ] publicar_github_pages        — gh-pages: editar_configuracion.html publicado
-2026-05-22 09:44:53 [DEBUG   ] publicar_github_pages        — gh-pages: ver_registros.html publicado
-2026-05-22 09:44:53 [INFO    ] publicar_github_pages        — GitHub Pages: 5/5 archivos HTML publicados
+2026-05-22 09:53:39 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-22 09:53:39 [INFO    ] main                         — AutoScout24 Agent — INICIO 2026-05-22 09:53:39
+2026-05-22 09:53:39 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-22 09:53:39 [INFO    ] main                         — Búsquedas activas: 2
+2026-05-22 09:53:39 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-22 09:53:39 [INFO    ] main                         — BÚSQUEDA 1/2: Mercedes GLC - España
+2026-05-22 09:53:39 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-22 09:53:39 [DEBUG   ] obtener_credenciales_google  — Credenciales Google en temporal: /tmp/tmp82b6waxa.json
+2026-05-22 09:53:41 [DEBUG   ] conectar_sheets              — Hoja 'AutoScout24 Monitor' encontrada
+2026-05-22 09:53:41 [INFO    ] cargar_estado                — [Mercedes GLC - España] Estado cargado — 159 anuncios conocidos
+2026-05-22 09:53:41 [INFO    ] scrape_busqueda              — Buscando: mercedes-benz glc-220 | ES | hasta:35000 | año desde:2017 | año hasta:2021 | km hasta:100000
+2026-05-22 09:53:41 [INFO    ] scrape_busqueda              — ── Página 1/10
+2026-05-22 09:53:41 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=1&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:53:42 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 619,612 bytes
+2026-05-22 09:53:42 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:53:42 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:53:45 [INFO    ] scrape_busqueda              — ── Página 2/10
+2026-05-22 09:53:45 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=2&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:53:46 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 624,709 bytes
+2026-05-22 09:53:46 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:53:46 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:53:49 [INFO    ] scrape_busqueda              — ── Página 3/10
+2026-05-22 09:53:49 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=3&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:53:50 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 648,470 bytes
+2026-05-22 09:53:50 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:53:50 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:53:53 [INFO    ] scrape_busqueda              — ── Página 4/10
+2026-05-22 09:53:53 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=4&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:53:53 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 652,752 bytes
+2026-05-22 09:53:53 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:53:53 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:53:56 [INFO    ] scrape_busqueda              — ── Página 5/10
+2026-05-22 09:53:56 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=5&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:53:57 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 645,927 bytes
+2026-05-22 09:53:57 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:53:57 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:54:00 [INFO    ] scrape_busqueda              — ── Página 6/10
+2026-05-22 09:54:00 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=6&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:54:01 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 632,946 bytes
+2026-05-22 09:54:01 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:54:01 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:54:04 [INFO    ] scrape_busqueda              — ── Página 7/10
+2026-05-22 09:54:04 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=7&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:54:04 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 640,117 bytes
+2026-05-22 09:54:04 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:54:04 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:54:07 [INFO    ] scrape_busqueda              — ── Página 8/10
+2026-05-22 09:54:07 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=8&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:54:09 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 548,807 bytes
+2026-05-22 09:54:09 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:54:09 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:54:12 [INFO    ] scrape_busqueda              — ── Página 9/10
+2026-05-22 09:54:12 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=9&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:54:12 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 359,682 bytes
+2026-05-22 09:54:12 [DEBUG   ] extraer_desde_next_data      — No se encontraron listings en __NEXT_DATA__
+2026-05-22 09:54:12 [DEBUG   ] extraer_desde_css            — CSS fallback: 0 cards encontradas
+2026-05-22 09:54:12 [INFO    ] obtener_anuncios_pagina      —   CSS:  0 anuncios
+2026-05-22 09:54:12 [INFO    ] scrape_busqueda              —   Página vacía — fin del scraping
+2026-05-22 09:54:12 [INFO    ] scrape_busqueda              — Scraping completado — 159 anuncios únicos (1 duplicados eliminados)
+2026-05-22 09:54:12 [INFO    ] detectar_cambios             —   Cambios: 0 nuevos | 0 bajadas de precio
+2026-05-22 09:54:13 [INFO    ] actualizar_sheets_busqueda   —   Sheets 'Mercedes GLC - España': +0 nuevas, 159 actualizadas
+2026-05-22 09:54:14 [DEBUG   ] guardar_estado               — [Mercedes GLC - España] Estado JSON: 8905 chars para 159 anuncios
+2026-05-22 09:54:14 [INFO    ] guardar_estado               — [Mercedes GLC - España] Estado guardado — 159 anuncios
+2026-05-22 09:54:14 [DEBUG   ] leer_hoja_completa           — [Mercedes GLC - España] Intentando leer worksheet: 'Mercedes GLC - España'
+2026-05-22 09:54:14 [DEBUG   ] leer_hoja_completa           — [Mercedes GLC - España] Filas obtenidas: 160
+2026-05-22 09:54:14 [DEBUG   ] leer_hoja_completa           — [Mercedes GLC - España] Cabeceras: ['ID', 'Título', 'Precio (€)']...
+2026-05-22 09:54:14 [INFO    ] leer_hoja_completa           — [Mercedes GLC - España] Histórico leído: 159 anuncios de Sheets
+2026-05-22 09:54:14 [INFO    ] main                         — [Mercedes GLC - España] Verificando disponibilidad de anuncios...
+2026-05-22 09:54:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:30 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC AMG Line
+2026-05-22 09:54:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:47 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:54:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:54:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:55:00 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic AMG Line
+2026-05-22 09:55:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
+2026-05-22 09:55:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:12 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
+2026-05-22 09:55:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
+2026-05-22 09:55:30 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
+2026-05-22 09:55:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
+2026-05-22 09:55:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:55:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:44 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:47 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
+2026-05-22 09:55:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC AMG LINE con TECHO 
+2026-05-22 09:55:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:55:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:55:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:55:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:55:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:56:00 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
+2026-05-22 09:56:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:56:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:56:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:56:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line
+2026-05-22 09:56:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
+2026-05-22 09:56:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic (EURO 6d)
+2026-05-22 09:56:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic
+2026-05-22 09:56:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC Coupé 220d 4Matic Aut.
+2026-05-22 09:56:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
+2026-05-22 09:56:12 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
+2026-05-22 09:56:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
+2026-05-22 09:56:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
+2026-05-22 09:56:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupé 220d 4Matic 9G-Tronic
+2026-05-22 09:56:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220d 4Matic Aut.
+2026-05-22 09:56:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.
+2026-05-22 09:56:25 [INFO    ] verificar_anuncios_activos   — Anuncios eliminados (no disponibles): 159
+2026-05-22 09:56:26 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - España] Email enviado a 1 destinatario(s): ant.rivas@gmail.com
+2026-05-22 09:56:26 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-22 09:56:26 [INFO    ] main                         — BÚSQUEDA 2/2: Mercedes GLC - Alemania
+2026-05-22 09:56:26 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-22 09:56:26 [INFO    ] cargar_estado                — [Mercedes GLC - Alemania] Estado cargado — 118 anuncios conocidos
+2026-05-22 09:56:26 [INFO    ] scrape_busqueda              — Buscando: mercedes-benz glc-220 | DE | hasta:35000 | año desde:2017 | año hasta:2021 | km hasta:100000
+2026-05-22 09:56:26 [INFO    ] scrape_busqueda              — ── Página 1/10
+2026-05-22 09:56:26 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=1&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:56:26 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 611,654 bytes
+2026-05-22 09:56:27 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:56:27 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:56:30 [INFO    ] scrape_busqueda              — ── Página 2/10
+2026-05-22 09:56:30 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=2&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:56:30 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 609,360 bytes
+2026-05-22 09:56:30 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:56:30 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:56:33 [INFO    ] scrape_busqueda              — ── Página 3/10
+2026-05-22 09:56:33 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=3&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:56:33 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 611,556 bytes
+2026-05-22 09:56:33 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:56:33 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:56:36 [INFO    ] scrape_busqueda              — ── Página 4/10
+2026-05-22 09:56:36 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=4&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:56:37 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 625,704 bytes
+2026-05-22 09:56:37 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:56:37 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:56:40 [INFO    ] scrape_busqueda              — ── Página 5/10
+2026-05-22 09:56:40 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=5&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:56:41 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 625,872 bytes
+2026-05-22 09:56:41 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:56:41 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:56:44 [INFO    ] scrape_busqueda              — ── Página 6/10
+2026-05-22 09:56:44 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=6&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:56:45 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 523,216 bytes
+2026-05-22 09:56:45 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-22 09:56:45 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-22 09:56:48 [INFO    ] scrape_busqueda              — ── Página 7/10
+2026-05-22 09:56:48 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=7&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-22 09:56:49 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 359,732 bytes
+2026-05-22 09:56:49 [DEBUG   ] extraer_desde_next_data      — No se encontraron listings en __NEXT_DATA__
+2026-05-22 09:56:49 [DEBUG   ] extraer_desde_css            — CSS fallback: 0 cards encontradas
+2026-05-22 09:56:49 [INFO    ] obtener_anuncios_pagina      —   CSS:  0 anuncios
+2026-05-22 09:56:49 [INFO    ] scrape_busqueda              —   Página vacía — fin del scraping
+2026-05-22 09:56:49 [INFO    ] scrape_busqueda              — Scraping completado — 118 anuncios únicos (2 duplicados eliminados)
+2026-05-22 09:56:49 [INFO    ] detectar_cambios             —   Cambios: 0 nuevos | 0 bajadas de precio
+2026-05-22 09:56:50 [INFO    ] actualizar_sheets_busqueda   —   Sheets 'Mercedes GLC - Alemania': +0 nuevas, 118 actualizadas
+2026-05-22 09:56:50 [DEBUG   ] guardar_estado               — [Mercedes GLC - Alemania] Estado JSON: 6609 chars para 118 anuncios
+2026-05-22 09:56:51 [INFO    ] guardar_estado               — [Mercedes GLC - Alemania] Estado guardado — 118 anuncios
+2026-05-22 09:56:51 [DEBUG   ] leer_hoja_completa           — [Mercedes GLC - Alemania] Intentando leer worksheet: 'Mercedes GLC - Alemania'
+2026-05-22 09:56:51 [DEBUG   ] leer_hoja_completa           — [Mercedes GLC - Alemania] Filas obtenidas: 119
+2026-05-22 09:56:51 [DEBUG   ] leer_hoja_completa           — [Mercedes GLC - Alemania] Cabeceras: ['ID', 'Título', 'Precio (€)']...
+2026-05-22 09:56:51 [INFO    ] leer_hoja_completa           — [Mercedes GLC - Alemania] Histórico leído: 118 anuncios de Sheets
+2026-05-22 09:56:51 [INFO    ] main                         — [Mercedes GLC - Alemania] Verificando disponibilidad de anuncios...
+2026-05-22 09:56:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic LED+NAVI+SH
+2026-05-22 09:56:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic (253.905)
+2026-05-22 09:56:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC GLC 220 d 4Matic nur 48 
+2026-05-22 09:56:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G-TRONIC
+2026-05-22 09:56:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*LED*AMG-Interieur*A
+2026-05-22 09:56:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d Exclusive 4Matic L
+2026-05-22 09:56:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G-TRONIC
+2026-05-22 09:56:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED/Alcantara/AMG I
+2026-05-22 09:56:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 2.1*Kamera*Navi*PDC*SHZ*Te
+2026-05-22 09:56:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 4Matic Exclusive Aut
+2026-05-22 09:57:00 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 4Matic Exclusive Aut
+2026-05-22 09:57:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4MATIC LED+AHK+COM
+2026-05-22 09:57:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*9G-Tron*Navi*R.Kam*
+2026-05-22 09:57:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 4M AMG NIGHT PANORAM
+2026-05-22 09:57:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic "NAVI-CAM-LEDER-SIT
+2026-05-22 09:57:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Garantie* 1.Hand*
+2026-05-22 09:57:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M+AMG+DISTRONIC+Kamera+AH
+2026-05-22 09:57:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic*STHZ*SHZ*NAVI*KAMERA*
+2026-05-22 09:57:06 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC Exclusive
+2026-05-22 09:57:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC AMG Panorama TWA IH
+2026-05-22 09:57:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG 360 Kamera
+2026-05-22 09:57:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED Navi Kamera Led
+2026-05-22 09:57:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic *AMG*NAVI*SHZ*KAMER
+2026-05-22 09:57:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/COUPE/ALLRAD/AHK/AU
+2026-05-22 09:57:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/LED-Schein/Leder/Al
+2026-05-22 09:57:12 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC -Klasse GLC 220 d 4Matic
+2026-05-22 09:57:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AMG+Burmester+HUD+Kamer
+2026-05-22 09:57:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d EXCLUSIVE 4M KAMERA MBUX P
+2026-05-22 09:57:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d EXCLUSIVE 4M KAMERA MBUX P
+2026-05-22 09:57:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220d 4M 9G-Aut/LED/Pano/3
+2026-05-22 09:57:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 D 4MATIC ACC MASSAGE 360° LA
+2026-05-22 09:57:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic
+2026-05-22 09:57:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.*LED*NAVI*TEMPO
+2026-05-22 09:57:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut.*LED*NAVI*TEMPO
+2026-05-22 09:57:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M Night+LED+Kam+Adv.Sound
+2026-05-22 09:57:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Aut., 2.Hand, Wenig
+2026-05-22 09:57:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d AMG Pano LEDER 19-Alu LED 
+2026-05-22 09:57:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*AMG Line*8-Fach*Amb
+2026-05-22 09:57:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line AHK,AUTOM.
+2026-05-22 09:57:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AHK DISTRONIC LED Kamer
+2026-05-22 09:57:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AMG+AHK+Pano+Totw+Kamer
+2026-05-22 09:57:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic ALLRAD|AMG-LINE|STY
+2026-05-22 09:57:26 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*LED*Kamera*DTacho*
+2026-05-22 09:57:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED Leder Navi Kame
+2026-05-22 09:57:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d Coupe 4Matic 9G-TR
+2026-05-22 09:57:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d Exclusive Pano*LED*Offroad
+2026-05-22 09:57:29 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 LED AMG AHK Standheizung Sou
+2026-05-22 09:57:30 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*AMG-LINE*ALCANTARA*
+2026-05-22 09:57:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 9G 4M *PANO*LED*SHZ*CARPLA
+2026-05-22 09:57:31 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AHK "Junge Sterne"
+2026-05-22 09:57:32 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d AMG 4M Rü-Ka AHK LED SHZ N
+2026-05-22 09:57:33 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4M-AssiP BusiP Kom
+2026-05-22 09:57:34 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M 9G-DCT Exclusive *LED*e
+2026-05-22 09:57:35 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC AMG Line
+2026-05-22 09:57:36 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line*PANO*AHK*L
+2026-05-22 09:57:37 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AMG-Line *AHK*PAN*SHZ*N
+2026-05-22 09:57:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d Coupe 4Matic 9G-TR
+2026-05-22 09:57:38 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC Diesel d 4Matic 9G-TRONI
+2026-05-22 09:57:39 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
+2026-05-22 09:57:40 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
+2026-05-22 09:57:41 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M EXCLUSIVE*LED*NAVI*KAME
+2026-05-22 09:57:42 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 Coupe 4M AMG NIGHT H
+2026-05-22 09:57:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic / 1.Hd / MBUX / Kam
+2026-05-22 09:57:43 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic, 360° Kamera, Head 
+2026-05-22 09:57:44 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Aut.*LED*N
+2026-05-22 09:57:45 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Aut.*LED*N
+2026-05-22 09:57:46 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 AMG Line
+2026-05-22 09:57:47 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M *AMG Night Distronic AH
+2026-05-22 09:57:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic LED NAVI KAMERA PDC
+2026-05-22 09:57:48 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220d 4M*AMG-Line*Dis+*360
+2026-05-22 09:57:49 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 9G-Tronic 4Matic,ACC,Leder,K
+2026-05-22 09:57:50 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M Coupe Navi-LED-Kamera-2
+2026-05-22 09:57:51 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M+Memory+Head-up+AHK+360G
+2026-05-22 09:57:52 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic Leder/Tem
+2026-05-22 09:57:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 DIESEL*LED*AHK*1.HAND*NIGHT*
+2026-05-22 09:57:53 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC d 4Matic - Facelift - Pa
+2026-05-22 09:57:54 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AHK KAMERA SPUR PDC SHZ
+2026-05-22 09:57:55 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G-TRONIC -
+2026-05-22 09:57:56 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 4Matic*SHZ*KLIMA*EURO6*NAVİ*
+2026-05-22 09:57:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
+2026-05-22 09:57:57 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic AMG Line Au
+2026-05-22 09:57:58 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AUT. AMG-Line
+2026-05-22 09:57:59 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic Klima/ Leder/ LED/ 
+2026-05-22 09:58:00 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC Aut. Facelift NAV/1
+2026-05-22 09:58:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M AUT Kam. KeyLess KlimaA
+2026-05-22 09:58:01 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic GLC Amg line 360 Ka
+2026-05-22 09:58:02 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line/LED/Distro
+2026-05-22 09:58:03 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Pano/AHK/M
+2026-05-22 09:58:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220d 4M AMG* MULTIBEAM#SH
+2026-05-22 09:58:04 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC
+2026-05-22 09:58:05 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC
+2026-05-22 09:58:07 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 D AMG LINE 4MATIC NIGHT BURM
+2026-05-22 09:58:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic (253.915)
+2026-05-22 09:58:08 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line Aut.*LED*T
+2026-05-22 09:58:09 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic | LED | AHK | Glasd
+2026-05-22 09:58:10 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC220 d 4M AMG LINE Exter. 
+2026-05-22 09:58:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic Aut.*NAV*AC
+2026-05-22 09:58:11 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic Aut.*NAV*AC
+2026-05-22 09:58:12 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Ma.*PANO*LED-360°-KEYLESS
+2026-05-22 09:58:13 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M 9G-TRON AMG Line *LED*P
+2026-05-22 09:58:14 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4MATIC Coupé AMG DISTRO 36
+2026-05-22 09:58:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG-Line *Alcantara
+2026-05-22 09:58:15 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4M 9G AMG Line LED *Garant
+2026-05-22 09:58:16 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-Tronic AMG Distr
+2026-05-22 09:58:17 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 9G-TRONIC Exclusive
+2026-05-22 09:58:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic*Burmester*Pano*Sitz
+2026-05-22 09:58:18 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG Line *Led-AHK-N
+2026-05-22 09:58:19 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG
+2026-05-22 09:58:20 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic (253.905)
+2026-05-22 09:58:21 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 Coupe AMG Line Head Up AHK
+2026-05-22 09:58:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic AMG AHK°ACC°PANO°KA
+2026-05-22 09:58:22 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/PANO/VOLL!/ACC/MEMO
+2026-05-22 09:58:23 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d AMG LINE 4MATIC 360°Kamera
+2026-05-22 09:58:24 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic/9G/2xAMG-Line/Distr
+2026-05-22 09:58:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 GLC 220 d 4Matic 9G AHK Sthz
+2026-05-22 09:58:25 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic *AHK/AIRMATIC/SPURP
+2026-05-22 09:58:27 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic 2xAMG-Line |Night-P
+2026-05-22 09:58:28 [INFO    ] verificar_anuncios_activos   —   Anuncio eliminado (no disponible): Mercedes-Benz GLC 220 d 4Matic+LED+NAVI+PDC+KLIMAA
+2026-05-22 09:58:28 [INFO    ] verificar_anuncios_activos   — Anuncios eliminados (no disponibles): 118
+2026-05-22 09:58:29 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - Alemania] Email enviado a 1 destinatario(s): ant.rivas@gmail.com
+2026-05-22 09:58:29 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-22 09:58:29 [INFO    ] main                         — Generando y publicando dashboard en GitHub Pages...
+2026-05-22 09:58:31 [DEBUG   ] publicar_github_pages        — gh-pages: busquedas/mercedes-glc-espana.html publicado
+2026-05-22 09:58:32 [DEBUG   ] publicar_github_pages        — gh-pages: busquedas/mercedes-glc-alemania.html publicado
+2026-05-22 09:58:34 [DEBUG   ] publicar_github_pages        — gh-pages: index.html publicado
+2026-05-22 09:58:35 [DEBUG   ] publicar_github_pages        — gh-pages: editar_configuracion.html publicado
+2026-05-22 09:58:36 [DEBUG   ] publicar_github_pages        — gh-pages: ver_registros.html publicado
+2026-05-22 09:58:36 [INFO    ] publicar_github_pages        — GitHub Pages: 5/5 archivos HTML publicados
