@@ -1025,7 +1025,11 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
         "bajadas":   bajadas,
     }
     json_bytes = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
-    nombre_fichero = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}.json"
+    # Sanitizar nombre para filename (eliminar caracteres prohibidos, mantener unicode)
+    nombre_limpio = re.sub(r'[<>:"/\\|?*]', '', nombre).replace(' ', '_').strip('_')
+    if not nombre_limpio:
+        nombre_limpio = "busqueda"
+    nombre_fichero = f"{nombre_limpio}_{date.today().isoformat()}.json"
 
     try:
         # Recoger todos los destinatarios válidos
@@ -1074,7 +1078,11 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
                 wb.save(xlsx_buf)
                 xlsx_bytes = xlsx_buf.getvalue()
                 
-                xlsx_name = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}_completo.xlsx"
+                # Sanitizar nombre para filename (mantener unicode, eliminar caracteres prohibidos)
+                nombre_limpio = re.sub(r'[<>:"/\\|?*]', '', nombre).replace(' ', '_').strip('_')
+                if not nombre_limpio:
+                    nombre_limpio = "busqueda"
+                xlsx_name = f"{nombre_limpio}_{date.today().isoformat()}_completo.xlsx"
                 adj_xlsx = MIMEApplication(xlsx_bytes, _subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 adj_xlsx["Content-Disposition"] = f'attachment; filename="{xlsx_name}"'
                 msg.attach(adj_xlsx)
@@ -1106,11 +1114,21 @@ def leer_hoja_completa(nombre: str) -> list[dict]:
     """Lee TODOS los anuncios históricos de la hoja de una búsqueda desde Sheets."""
     try:
         sp  = conectar_sheets()
-        ws  = sp.worksheet(nombre[:50])
+        nombre_ws = nombre[:50]
+        log.debug(f"[{nombre}] Intentando leer worksheet: '{nombre_ws}'")
+        ws  = sp.worksheet(nombre_ws)
         filas = ws.get_all_values()
-        if not filas or len(filas) < 2:
+        log.debug(f"[{nombre}] Filas obtenidas: {len(filas)}")
+        
+        if not filas:
+            log.warning(f"[{nombre}] Hoja vacía (0 filas)")
             return []
+        if len(filas) < 2:
+            log.warning(f"[{nombre}] Solo cabeceras, sin datos ({len(filas)} fila(s))")
+            return []
+            
         hdrs = filas[0]
+        log.debug(f"[{nombre}] Cabeceras: {hdrs[:3]}...")
         result = []
         for row in filas[1:]:
             if not any(row): continue
@@ -1695,6 +1713,27 @@ def main():
             # 6. Leer histórico completo de Sheets
             filas_hist = leer_hoja_completa(nombre)
             
+            # 6b. Fallback: si Sheets está vacío, usar los anuncios actuales del scraping
+            if not filas_hist:
+                log.warning(f"[{nombre}] Sheets vacío - usando anuncios del scraping actual como fallback")
+                filas_hist = []
+                for a in anuncios:
+                    filas_hist.append({
+                        "id": a.get("id", ""),
+                        "titulo": a.get("titulo", ""),
+                        "precio": str(a.get("precio", "")),
+                        "precio_anterior": "",
+                        "porcentaje_bajada": "",
+                        "anio": a.get("anio", ""),
+                        "km": a.get("km", ""),
+                        "combustible": a.get("combustible", ""),
+                        "ubicacion": a.get("ubicacion", ""),
+                        "estado": "🆕 NUEVO" if a.get("id") in [n.get("id") for n in nuevos] else "conocido",
+                        "fecha_detectado": date.today().isoformat(),
+                        "url": a.get("url", ""),
+                    })
+                log.info(f"[{nombre}] Fallback: {len(filas_hist)} anuncios del scraping actual")
+            
             # 7. Verificar anuncios activos (solo filtra la lista, no modifica Sheets todavía)
             log.info(f"[{nombre}] Verificando disponibilidad de anuncios...")
             filas_hist_limpias = verificar_anuncios_activos(filas_hist)
@@ -1781,4 +1820,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
     
