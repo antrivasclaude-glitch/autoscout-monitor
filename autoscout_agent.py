@@ -1695,12 +1695,14 @@ def main():
             # 6. Leer histórico completo de Sheets
             filas_hist = leer_hoja_completa(nombre)
             
-            # 7. Verificar anuncios activos y eliminar los que ya no existen
+            # 7. Verificar anuncios activos (solo filtra la lista, no modifica Sheets todavía)
             log.info(f"[{nombre}] Verificando disponibilidad de anuncios...")
             filas_hist_limpias = verificar_anuncios_activos(filas_hist)
             
-            # 8. Si se eliminaron anuncios, reescribir la hoja completa
-            if len(filas_hist_limpias) < len(filas_hist):
+            # 7b. Limpieza de Sheets cada lunes (elimina anuncios no disponibles)
+            es_lunes = datetime.now().weekday() == 0
+            if es_lunes and len(filas_hist_limpias) < len(filas_hist):
+                log.info(f"[{nombre}] Limpieza automática (lunes): eliminando {len(filas_hist) - len(filas_hist_limpias)} anuncios no disponibles de Sheets")
                 try:
                     sp = conectar_sheets()
                     ws = sp.worksheet(nombre[:50])
@@ -1718,14 +1720,16 @@ def main():
                             ]
                             filas_sheets.append(fila_datos)
                         ws.update(filas_sheets, "A1")
-                        log.info(f"[{nombre}] Hoja limpiada: {len(filas_hist) - len(filas_hist_limpias)} anuncios eliminados")
+                        log.info(f"[{nombre}] Sheets limpiado: {len(filas_hist) - len(filas_hist_limpias)} anuncios eliminados")
                 except Exception as e:
-                    log.error(f"Error limpiando Sheets [{nombre}]: {e}")
+                    log.error(f"[{nombre}] Error limpiando Sheets: {e}")
+            elif es_lunes:
+                log.info(f"[{nombre}] Limpieza lunes: todos los anuncios están activos")
             
-            # Usar solo anuncios activos para email y dashboard
+            # Usar anuncios activos para email y dashboard
             filas_hist = filas_hist_limpias
 
-            # 9. Email independiente por búsqueda + adjuntos (con filas activas)
+            # 8. Email independiente por búsqueda + adjuntos (con filas activas)
             adjuntar_hoja = b.get("adjuntar_hoja_calculo", False)
             enviar_email_busqueda(
                 nombre, nuevos, bajadas, url_sheets,
@@ -1777,7 +1781,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
 
