@@ -1,4 +1,11 @@
-has estos cambios :
+PENDIENTES :
+
+- llamadas http dejar una pausa de dos segundos tras llamada para no saturar o ser detectados
+
+
+
+HECHOS :
+
 - Eliminar vehiculos si al entrar en la url del vehiculo aparece el texto "Este vehículo ya no está disponible." , por lo que deberas entrar uno a uno en todas las url para ir comprbando si aun estan activos y si no lo estan eliminarlos de la hoja de calculo
 - en los ficheros .py o .html , indicar con un comentario la fecha de la version que se esta usando
 - tematizacion en la pagina web index tambien y dejar elegir algun temas mas , asegurar que la eleccion es persistente
