@@ -1,5 +1,6 @@
 """
-AutoScout24 Agent — Versión GitHub Actions
+AutoScout24 Agent — v7 (2026-05-21)
+Versión GitHub Actions
 - Config en config.json (múltiples búsquedas, filtros opcionales)
 - Credenciales Google: variable GOOGLE_CREDENTIALS_JSON (base64)
 - Contraseña email:    variable EMAIL_PASSWORD
@@ -9,6 +10,12 @@ AutoScout24 Agent — Versión GitHub Actions
 
 import os, sys, json, time, base64, re, smtplib, logging, tempfile, csv, io, unicodedata
 import requests
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
 from datetime import datetime, date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -1021,6 +1028,13 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
     nombre_fichero = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}.json"
 
     try:
+        # Recoger todos los destinatarios válidos
+        destinatarios = [em["destino"]]
+        for i in range(2, 6):  # destino_2, destino_3, destino_4, destino_5
+            dest = em.get(f"destino_{i}", "").strip()
+            if dest and "@" in dest and "." in dest:
+                destinatarios.append(dest)
+        
         msg = MIMEMultipart("mixed")
         if n_nuevos == 0 and n_bajadas == 0:
             asunto = f"🚗 AutoScout24 [{nombre}] — Sin novedades — {hoy}"
@@ -1028,7 +1042,7 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
             asunto = f"🚗 AutoScout24 [{nombre}] — {n_nuevos} nuevos, {n_bajadas} bajadas — {hoy}"
         msg["Subject"] = asunto
         msg["From"] = em["origen"]
-        msg["To"]   = em["destino"]
+        msg["To"]   = ", ".join(destinatarios)
         msg.attach(MIMEText(html, "html"))
 
         # Adjunto 1: JSON del día
@@ -1036,25 +1050,46 @@ def enviar_email_busqueda(nombre: str, nuevos: list, bajadas: list, url_sheets: 
         adjunto["Content-Disposition"] = f'attachment; filename="{nombre_fichero}"'
         msg.attach(adjunto)
 
-        # Adjunto 2: CSV histórico completo (si adjuntar_hoja=true en config)
-        if adjuntar_hoja and filas_hist:
-            buf = io.StringIO()
-            campos = list(filas_hist[0].keys()) if filas_hist else []
-            w = csv.DictWriter(buf, fieldnames=campos, extrasaction="ignore")
-            w.writeheader()
-            w.writerows(filas_hist)
-            csv_bytes = buf.getvalue().encode("utf-8-sig")  # BOM para Excel
-            csv_name  = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}_completo.csv"
-            adj_csv = MIMEApplication(csv_bytes, _subtype="csv")
-            adj_csv["Content-Disposition"] = f'attachment; filename="{csv_name}"'
-            msg.attach(adj_csv)
-            log.info(f"[{nombre}] CSV histórico adjunto: {csv_name} ({len(filas_hist)} filas)")
+        # Adjunto 2: XLSX histórico completo (si adjuntar_hoja=true en config)
+        if adjuntar_hoja and filas_hist and OPENPYXL_AVAILABLE:
+            try:
+                wb = Workbook()
+                ws = wb.active
+                ws.title = nombre[:31]  # Excel limita a 31 chars
+                
+                # Cabeceras con estilo
+                campos = list(filas_hist[0].keys()) if filas_hist else []
+                ws.append(campos)
+                for cell in ws[1]:
+                    cell.font = Font(bold=True)
+                    cell.fill = PatternFill(start_color="1F4788", end_color="1F4788", fill_type="solid")
+                    cell.font = Font(color="FFFFFF", bold=True)
+                
+                # Datos
+                for fila in filas_hist:
+                    ws.append([fila.get(c, "") for c in campos])
+                
+                # Guardar en memoria
+                xlsx_buf = io.BytesIO()
+                wb.save(xlsx_buf)
+                xlsx_bytes = xlsx_buf.getvalue()
+                
+                xlsx_name = re.sub(r"[^\w\-]", "_", nombre) + f"_{date.today().isoformat()}_completo.xlsx"
+                adj_xlsx = MIMEApplication(xlsx_bytes, _subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                adj_xlsx["Content-Disposition"] = f'attachment; filename="{xlsx_name}"'
+                msg.attach(adj_xlsx)
+                log.info(f"[{nombre}] XLSX histórico adjunto: {xlsx_name} ({len(filas_hist)} filas)")
+            except Exception as e:
+                log.error(f"Error generando XLSX: {e}")
+        elif adjuntar_hoja and not OPENPYXL_AVAILABLE:
+            log.warning("openpyxl no disponible - no se puede adjuntar XLSX")
 
         with smtplib.SMTP_SSL(em["servidor_smtp"], em["puerto_smtp"]) as server:
             server.login(em["origen"], em["password"])
-            server.sendmail(em["origen"], em["destino"], msg.as_string())
+            server.sendmail(em["origen"], destinatarios, msg.as_string())
 
-        log.info(f"[{nombre}] Email enviado a {em['destino']} ({n_nuevos} nuevos, {n_bajadas} bajadas)")
+        dest_str = ", ".join(destinatarios)
+        log.info(f"[{nombre}] Email enviado a {len(destinatarios)} destinatario(s): {dest_str[:80]}")
 
     except smtplib.SMTPAuthenticationError:
         log.error("Error autenticación SMTP — usa contraseña de APLICACIÓN de Gmail (16 chars)")
@@ -1121,8 +1156,57 @@ _HTML_BUSQUEDA = (
 )
 
 _HTML_INDEX = (
-'''<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>AutoScout24 Monitor</title>\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}\nheader{background:#1a1a1a;color:white;padding:20px 24px}\nheader h1{font-size:18px;font-weight:600}\nheader p{font-size:13px;color:#888;margin-top:4px}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}\na.card{background:white;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid #ebebeb;text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}\na.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}\n.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:#1a1a1a}\n.cs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}\n.c{background:#f9f9f7;border-radius:7px;padding:8px 10px}\n.cl{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}\n.cv{font-size:17px;font-weight:600}\n.cvb{color:#1e40af}.cvr{color:#991b1b}\n.cf{font-size:11px;color:#bbb;border-top:1px solid #f2f2f2;padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}\n.cf span{color:#1a1a1a;font-weight:500;font-size:12px}\n</style>\n</head>\n<body>\n<header><h1>AutoScout24 Monitor</h1><p>Actualizado: __FECHA__</p></header>\n<div class="grid">__CARDS__</div>\n</body>\n</html>'''
+'<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>AutoScout24 Monitor</title>\n<!-- v7 (2026-05-21) -->\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:\'IBM Plex Sans\',system-ui,sans-serif;min-height:100vh;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}\n/* ── TEMAS ── */\nbody.tema-claro{--bg:#f5f5f0;--fg:#1a1a1a;--hdr:#1a1a1a;--hdr-fg:white;--card:#fff;--card-b:#ebebeb;--stat-bg:#f9f9f7;--stat-fg:#1a1a1a;--lbl:#aaa;--val:#1a1a1a;--val-blue:#1e40af;--val-red:#991b1b}\nbody.tema-oscuro{--bg:#0f1117;--fg:#e2e8f0;--hdr:#1e2433;--hdr-fg:#e2e8f0;--card:#1e2433;--card-b:#2d3748;--stat-bg:#161b27;--stat-fg:#e2e8f0;--lbl:#64748b;--val:#e2e8f0;--val-blue:#60a5fa;--val-red:#f87171}\nbody.tema-verde{--bg:#f0f7f0;--fg:#1a2e1a;--hdr:#1a3a1a;--hdr-fg:white;--card:#fff;--card-b:#c6e6c6;--stat-bg:#edf7ed;--stat-fg:#1a2e1a;--lbl:#6b8f6b;--val:#1a2e1a;--val-blue:#166534;--val-red:#92400e}\nbody.tema-azul{--bg:#eff6ff;--fg:#1e3a8a;--hdr:#1e40af;--hdr-fg:white;--card:#fff;--card-b:#bfdbfe;--stat-bg:#dbeafe;--stat-fg:#1e3a8a;--lbl:#60a5fa;--val:#1e3a8a;--val-blue:#1d4ed8;--val-red:#dc2626}\nbody.tema-purpura{--bg:#faf5ff;--fg:#581c87;--hdr:#7c3aed;--hdr-fg:white;--card:#fff;--card-b:#e9d5ff;--stat-bg:#f3e8ff;--stat-fg:#581c87;--lbl:#a78bfa;--val:#581c87;--val-blue:#7c3aed;--val-red:#dc2626}\nheader{background:var(--hdr);color:var(--hdr-fg);padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}\nheader h1{font-size:18px;font-weight:600;flex:1;min-width:200px}\nheader p{font-size:13px;opacity:.7;margin-top:4px}\n.tema-sel{display:flex;gap:6px;align-items:center;margin-left:auto}\n.tema-sel span{font-size:11px;opacity:.7}\n.tema-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border .15s}\n.tema-btn:hover,.tema-btn.on{border-color:var(--hdr-fg)}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;padding:24px}\na.card{background:var(--card);border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.07);border:1px solid var(--card-b);text-decoration:none;color:inherit;display:block;transition:box-shadow .15s,transform .15s}\na.card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);transform:translateY(-1px)}\n.card h2{font-size:14px;font-weight:600;margin-bottom:14px;color:var(--fg)}\n.cs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}\n.c{background:var(--stat-bg);border-radius:7px;padding:8px 10px}\n.cl{font-size:10px;color:var(--lbl);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}\n.cv{font-size:17px;font-weight:600;color:var(--stat-fg)}\n.cvb{color:var(--val-blue)}.cvr{color:var(--val-red)}\n.cf{font-size:11px;color:var(--lbl);border-top:1px solid var(--card-b);padding-top:10px;margin-top:2px;display:flex;justify-content:space-between}\n.cf span{color:var(--val);font-weight:500;font-size:12px}\n</style>\n</head>\n<body class="tema-claro">\n<header>\n  <div>\n    <h1>AutoScout24 Monitor</h1>\n    <p>Actualizado: __FECHA__</p>\n  </div>\n  <div class="tema-sel">\n    <span>Tema</span>\n    <div class="tema-btn on" id="tc" title="Claro" style="background:#f5f5f0" onclick="setTema(\'tema-claro\',this)"></div>\n    <div class="tema-btn" id="to" title="Oscuro" style="background:#0f1117" onclick="setTema(\'tema-oscuro\',this)"></div>\n    <div class="tema-btn" id="tv" title="Verde" style="background:#1a3a1a" onclick="setTema(\'tema-verde\',this)"></div>\n    <div class="tema-btn" id="ta" title="Azul" style="background:#1e40af" onclick="setTema(\'tema-azul\',this)"></div>\n    <div class="tema-btn" id="tp" title="Púrpura" style="background:#7c3aed" onclick="setTema(\'tema-purpura\',this)"></div>\n  </div>\n</header>\n<div class="grid">__CARDS__</div>\n<script>\nfunction setTema(t,el){document.body.className=t;localStorage.setItem("as24-tema",t);document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}\n(function(){const t=localStorage.getItem("as24-tema")||"tema-claro";const map={"tema-claro":"tc","tema-oscuro":"to","tema-verde":"tv","tema-azul":"ta","tema-purpura":"tp"};document.body.className=t;const el=document.getElementById(map[t]);if(el){document.querySelectorAll(".tema-btn").forEach(b=>b.classList.remove("on"));el.classList.add("on");}})();\n</script>\n</body>\n</html>'
 )
+
+
+
+# ══════════════════════════════════════════════════════════════
+#  VERIFICACIÓN ANUNCIOS ACTIVOS (limpieza de URLs muertas)
+# ══════════════════════════════════════════════════════════════
+
+def verificar_anuncios_activos(filas_hist: list[dict]) -> list[dict]:
+    """Verifica cada URL y elimina anuncios que ya no están disponibles.
+    Retorna la lista actualizada sin los anuncios eliminados."""
+    if not filas_hist:
+        return []
+    
+    activos = []
+    eliminados = []
+    
+    for fila in filas_hist:
+        url = fila.get("url", "")
+        if not url:
+            activos.append(fila)
+            continue
+        
+        try:
+            r = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+            if r.status_code == 200:
+                # Verificar si el texto indica que no está disponible
+                if "Este vehículo ya no está disponible" in r.text or                    "This vehicle is no longer available" in r.text or                    "Dieses Fahrzeug ist nicht mehr verfügbar" in r.text:
+                    eliminados.append(fila.get("id", url[:30]))
+                    log.info(f"  Anuncio eliminado (no disponible): {fila.get('titulo', '')[:50]}")
+                else:
+                    activos.append(fila)
+            elif r.status_code == 404:
+                eliminados.append(fila.get("id", url[:30]))
+                log.info(f"  Anuncio eliminado (404): {fila.get('titulo', '')[:50]}")
+            else:
+                # Si hay error pero no es 404, lo mantenemos
+                activos.append(fila)
+        except Exception as e:
+            # Error de red, mantener el anuncio
+            activos.append(fila)
+            log.debug(f"  Error verificando {url[:40]}: {e}")
+        
+        # Pausa breve entre requests
+        time.sleep(0.5)
+    
+    if eliminados:
+        log.info(f"Anuncios eliminados (no disponibles): {len(eliminados)}")
+    
+    return activos
 
 
 def generar_html_busqueda(nombre: str, filas: list[dict], nuevos: list, bajadas: list, fecha: str) -> str:
@@ -1161,6 +1245,13 @@ def generar_index_html(busquedas_info: list[dict]) -> str:
 # ══════════════════════════════════════════════════════════════
 #  PUBLICACIÓN GITHUB PAGES
 # ══════════════════════════════════════════════════════════════
+
+
+
+def generar_ver_registros() -> str:
+    """Genera ver_registros.html — visor de logs.
+    No enlazada desde ninguna otra página; solo accesible por URL directa."""
+    return '<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>Ver registros — AutoScout24 Monitor</title>\n<!-- v7 (2026-05-21) -->\n<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:\'IBM Plex Sans\',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}\nheader{background:#1e2433;border-bottom:1px solid #2d3748;padding:16px 24px}\nheader h1{font-size:16px;font-weight:600}\nheader p{font-size:12px;color:#64748b;margin-top:2px}\n.main{max-width:1200px;margin:0 auto;padding:24px}\n.card{background:#1e2433;border:1px solid #2d3748;border-radius:10px;padding:20px;margin-bottom:16px}\n.card h3{font-size:13px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}\n.selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}\nbutton{padding:6px 14px;border-radius:6px;border:1px solid #2d3748;background:#161b27;color:#94a3b8;font-size:12px;cursor:pointer;transition:all .15s}\nbutton:hover{border-color:#4b5563;color:#e2e8f0}\nbutton.active{background:#1d4ed8;border-color:#1d4ed8;color:white}\n.log-viewer{background:#0d1117;border:1px solid #2d3748;border-radius:8px;padding:16px;font-family:\'IBM Plex Mono\',monospace;font-size:12px;line-height:1.6;max-height:600px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}\n.log-line{margin:2px 0}\n.log-line.error{color:#f87171}\n.log-line.warning{color:#fbbf24}\n.log-line.info{color:#94a3b8}\n.log-line.debug{color:#475569}\n.status{padding:10px 12px;border-radius:6px;font-size:12px;margin-top:12px}\n.status.ok{background:#052e16;color:#86efac;border:1px solid #14532d}\n.status.err{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d}\n.status.loading{background:#161b27;color:#64748b;border:1px solid #2d3748}\n</style>\n</head>\n<body>\n<header>\n  <h1>📋 Ver registros</h1>\n  <p>Logs de ejecuciones del AutoScout24 Monitor</p>\n</header>\n<div class="main">\n  <div class="card">\n    <h3>Seleccionar log</h3>\n    <div class="selector" id="selector">\n      <div class="status loading">Cargando logs disponibles...</div>\n    </div>\n  </div>\n  <div class="card">\n    <h3>Contenido del log</h3>\n    <div class="log-viewer" id="viewer">Selecciona un log arriba para visualizarlo</div>\n  </div>\n</div>\n<script>\nconst REPO = "antrivasclaude-glitch/autoscout-monitor";\nconst BASE_URL = `https://antrivasclaude-glitch.github.io/autoscout-monitor/`;\n\nasync function cargarLogs() {\n  try {\n    const r = await fetch(`https://api.github.com/repos/${REPO}/git/trees/gh-pages?recursive=1`);\n    if (!r.ok) throw new Error("No se pudo acceder a la API");\n    \n    const data = await r.json();\n    const logs = data.tree\n      .filter(f => f.path.startsWith("log_") && f.path.endsWith(".txt"))\n      .map(f => f.path.replace("log_", "").replace(".txt", ""))\n      .sort().reverse();\n    \n    const sel = document.getElementById("selector");\n    if (logs.length === 0) {\n      sel.innerHTML = \'<div class="status err">No hay logs disponibles</div>\';\n      return;\n    }\n    \n    sel.innerHTML = logs.map(fecha => \n      `<button onclick="cargarLog(\'${fecha}\')">${fecha}</button>`\n    ).join("");\n  } catch(e) {\n    document.getElementById("selector").innerHTML = \n      `<div class="status err">Error: ${e.message}</div>`;\n  }\n}\n\nasync function cargarLog(fecha) {\n  const viewer = document.getElementById("viewer");\n  viewer.innerHTML = \'<div class="status loading">Cargando...</div>\';\n  \n  document.querySelectorAll(".selector button").forEach(b => b.classList.remove("active"));\n  event.target.classList.add("active");\n  \n  try {\n    const r = await fetch(`${BASE_URL}log_${fecha}.txt`);\n    if (!r.ok) throw new Error(`HTTP ${r.status}`);\n    \n    const texto = await r.text();\n    const lineas = texto.split("\\n").map(linea => {\n      let clase = "info";\n      if (linea.includes("[ERROR")) clase = "error";\n      else if (linea.includes("[WARNING")) clase = "warning";\n      else if (linea.includes("[DEBUG")) clase = "debug";\n      return `<div class="log-line ${clase}">${linea}</div>`;\n    }).join("");\n    \n    viewer.innerHTML = lineas || \'<div class="status err">Log vacío</div>\';\n  } catch(e) {\n    viewer.innerHTML = `<div class="status err">Error cargando log: ${e.message}</div>`;\n  }\n}\n\nwindow.addEventListener("load", cargarLogs);\n</script>\n</body>\n</html>'
 
 
 def generar_editor_configuracion() -> str:
@@ -1603,6 +1694,37 @@ def main():
 
             # 6. Leer histórico completo de Sheets (para dashboard y CSV)
             filas_hist = leer_hoja_completa(nombre)
+            
+            # 6b. Verificar anuncios activos y eliminar los que ya no existen
+            log.info(f"[{nombre}] Verificando disponibilidad de anuncios...")
+            filas_hist_limpias = verificar_anuncios_activos(filas_hist)
+            
+            # 6c. Si se eliminaron anuncios, reescribir la hoja completa
+            if len(filas_hist_limpias) < len(filas_hist):
+                try:
+                    sp = conectar_sheets()
+                    ws = sp.worksheet(nombre[:50])
+                    ws.clear()
+                    if filas_hist_limpias:
+                        # Reconstruir filas para Sheets
+                        filas_sheets = [CABECERAS]
+                        ids_nuevos_tmp = {a["id"] for a in nuevos}
+                        ids_bajadas_tmp = {a["id"] for a in bajadas}
+                        for f in filas_hist_limpias:
+                            fila_datos = [
+                                f.get("id",""), f.get("titulo",""), f.get("precio",""),
+                                f.get("precio_anterior",""), "", "",
+                                f.get("anio",""), f.get("km",""), f.get("combustible",""),
+                                f.get("ubicacion",""), f.get("estado",""), 
+                                f.get("fecha_detectado",""), f.get("url","")
+                            ]
+                            filas_sheets.append(fila_datos)
+                        ws.update(filas_sheets, "A1")
+                        log.info(f"[{nombre}] Hoja limpiada: {len(filas_hist) - len(filas_hist_limpias)} anuncios eliminados")
+                except Exception as e:
+                    log.error(f"Error limpiando Sheets [{nombre}]: {e}")
+            
+            filas_hist = filas_hist_limpias  # usar la versión limpia para el resto
 
             # 7. Email independiente por búsqueda + adjuntos
             adjuntar_hoja = b.get("adjuntar_hoja_calculo", False)
@@ -1635,8 +1757,9 @@ def main():
             log.info(sep)
             log.info("Generando y publicando dashboard en GitHub Pages...")
             paginas_html["index.html"] = generar_index_html(busquedas_info)
-            # Editor config: no enlazado desde ninguna página, solo accesible por URL directa
+            # Editor config y ver_registros: no enlazados, solo accesibles por URL directa
             paginas_html["editar_configuracion.html"] = generar_editor_configuracion()
+            paginas_html["ver_registros.html"] = generar_ver_registros()
             url_pages = publicar_github_pages(paginas_html)
             if url_pages:
                 log.info(f"Dashboard: {url_pages}")
