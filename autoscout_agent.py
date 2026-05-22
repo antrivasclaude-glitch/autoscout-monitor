@@ -1692,14 +1692,14 @@ def main():
             # 5. Guardar estado compacto
             guardar_estado(nombre, anuncios)
 
-            # 6. Leer histórico completo de Sheets (para dashboard y CSV)
+            # 6. Leer histórico completo de Sheets
             filas_hist = leer_hoja_completa(nombre)
             
-            # 6b. Verificar anuncios activos y eliminar los que ya no existen
+            # 7. Verificar anuncios activos y eliminar los que ya no existen
             log.info(f"[{nombre}] Verificando disponibilidad de anuncios...")
             filas_hist_limpias = verificar_anuncios_activos(filas_hist)
             
-            # 6c. Si se eliminaron anuncios, reescribir la hoja completa
+            # 8. Si se eliminaron anuncios, reescribir la hoja completa
             if len(filas_hist_limpias) < len(filas_hist):
                 try:
                     sp = conectar_sheets()
@@ -1708,8 +1708,6 @@ def main():
                     if filas_hist_limpias:
                         # Reconstruir filas para Sheets
                         filas_sheets = [CABECERAS]
-                        ids_nuevos_tmp = {a["id"] for a in nuevos}
-                        ids_bajadas_tmp = {a["id"] for a in bajadas}
                         for f in filas_hist_limpias:
                             fila_datos = [
                                 f.get("id",""), f.get("titulo",""), f.get("precio",""),
@@ -1724,16 +1722,17 @@ def main():
                 except Exception as e:
                     log.error(f"Error limpiando Sheets [{nombre}]: {e}")
             
-            filas_hist = filas_hist_limpias  # usar la versión limpia para el resto
+            # Usar solo anuncios activos para email y dashboard
+            filas_hist = filas_hist_limpias
 
-            # 7. Email independiente por búsqueda + adjuntos
+            # 9. Email independiente por búsqueda + adjuntos (con filas activas)
             adjuntar_hoja = b.get("adjuntar_hoja_calculo", False)
             enviar_email_busqueda(
                 nombre, nuevos, bajadas, url_sheets,
                 filas_hist=filas_hist, adjuntar_hoja=adjuntar_hoja
             )
 
-            # 8. Preparar datos para el dashboard HTML
+            # 10. Preparar datos para el dashboard HTML
             slug = _slug(nombre)
             paginas_html[f"busquedas/{slug}.html"] = generar_html_busqueda(
                 nombre, filas_hist, nuevos, bajadas, date.today().isoformat()
@@ -1778,4 +1777,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
