@@ -1,0 +1,128 @@
+2026-05-26 07:00:13 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-26 07:00:13 [INFO    ] main                         — AutoScout24 Agent — INICIO 2026-05-26 07:00:13
+2026-05-26 07:00:13 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-26 07:00:13 [INFO    ] main                         — Búsquedas activas: 2
+2026-05-26 07:00:13 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-26 07:00:13 [INFO    ] main                         — BÚSQUEDA 1/2: Mercedes GLC - España
+2026-05-26 07:00:13 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-26 07:00:13 [DEBUG   ] obtener_credenciales_google  — Credenciales Google en temporal: /tmp/tmp92g_l2p4.json
+2026-05-26 07:00:14 [DEBUG   ] conectar_sheets              — Hoja 'AutoScout24 Monitor' encontrada
+2026-05-26 07:00:14 [INFO    ] cargar_estado                — [Mercedes GLC - España] Estado cargado — 152 anuncios conocidos
+2026-05-26 07:00:14 [INFO    ] scrape_busqueda              — Buscando: mercedes-benz glc-220 | ES | hasta:35000 | año desde:2017 | año hasta:2021 | km hasta:100000
+2026-05-26 07:00:14 [INFO    ] scrape_busqueda              — ── Página 1/10
+2026-05-26 07:00:14 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=1&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:15 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 622,644 bytes
+2026-05-26 07:00:15 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:15 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:18 [INFO    ] scrape_busqueda              — ── Página 2/10
+2026-05-26 07:00:18 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=2&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:18 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 626,910 bytes
+2026-05-26 07:00:18 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:18 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:21 [INFO    ] scrape_busqueda              — ── Página 3/10
+2026-05-26 07:00:21 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=3&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:22 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 650,315 bytes
+2026-05-26 07:00:22 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:22 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:25 [INFO    ] scrape_busqueda              — ── Página 4/10
+2026-05-26 07:00:25 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=4&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:25 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 651,903 bytes
+2026-05-26 07:00:25 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:25 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:28 [INFO    ] scrape_busqueda              — ── Página 5/10
+2026-05-26 07:00:28 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=5&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:29 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 649,090 bytes
+2026-05-26 07:00:29 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:29 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:32 [INFO    ] scrape_busqueda              — ── Página 6/10
+2026-05-26 07:00:32 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=6&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:32 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 636,911 bytes
+2026-05-26 07:00:32 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:32 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:35 [INFO    ] scrape_busqueda              — ── Página 7/10
+2026-05-26 07:00:35 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=7&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:36 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 641,433 bytes
+2026-05-26 07:00:36 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:36 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:39 [INFO    ] scrape_busqueda              — ── Página 8/10
+2026-05-26 07:00:39 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=8&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:40 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 550,821 bytes
+2026-05-26 07:00:40 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:40 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:43 [INFO    ] scrape_busqueda              — ── Página 9/10
+2026-05-26 07:00:43 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=E&damaged_listing=exclude&desc=0&page=9&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:44 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 360,459 bytes
+2026-05-26 07:00:44 [DEBUG   ] extraer_desde_next_data      — No se encontraron listings en __NEXT_DATA__
+2026-05-26 07:00:44 [DEBUG   ] extraer_desde_css            — CSS fallback: 0 cards encontradas
+2026-05-26 07:00:44 [INFO    ] obtener_anuncios_pagina      —   CSS:  0 anuncios
+2026-05-26 07:00:44 [INFO    ] scrape_busqueda              —   Página vacía — fin del scraping
+2026-05-26 07:00:44 [INFO    ] scrape_busqueda              — Scraping completado — 158 anuncios únicos (2 duplicados eliminados)
+2026-05-26 07:00:44 [INFO    ] detectar_cambios             —   Cambios: 11 nuevos | 6 bajadas de precio
+2026-05-26 07:00:45 [INFO    ] actualizar_sheets_busqueda   —   Sheets 'Mercedes GLC - España': +4 nuevas, 154 actualizadas
+2026-05-26 07:00:45 [INFO    ] actualizar_sheets_busqueda   —   Hoja del día: 17 entradas
+2026-05-26 07:00:46 [DEBUG   ] guardar_estado               — [Mercedes GLC - España] Estado JSON: 8849 chars para 158 anuncios
+2026-05-26 07:00:46 [INFO    ] guardar_estado               — [Mercedes GLC - España] Estado guardado — 158 anuncios
+2026-05-26 07:00:46 [INFO    ] leer_hoja_completa           — [Mercedes GLC - España] Histórico leído: 168 anuncios de Sheets
+2026-05-26 07:00:46 [INFO    ] leer_hoja_completa           — [Mercedes GLC - España] Histórico leído: 168 anuncios de Sheets
+2026-05-26 07:00:46 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - España] XLSX histórico adjunto: Mercedes_GLC_-_España_2026-05-26_completo.xlsx (168 filas)
+2026-05-26 07:00:48 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - España] Email enviado a 1 destinatario(s): ant.rivas@gmail.com
+2026-05-26 07:00:48 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-26 07:00:48 [INFO    ] main                         — BÚSQUEDA 2/2: Mercedes GLC - Alemania
+2026-05-26 07:00:48 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-26 07:00:48 [INFO    ] cargar_estado                — [Mercedes GLC - Alemania] Estado cargado — 118 anuncios conocidos
+2026-05-26 07:00:48 [INFO    ] scrape_busqueda              — Buscando: mercedes-benz glc-220 | DE | hasta:35000 | año desde:2017 | año hasta:2021 | km hasta:100000
+2026-05-26 07:00:48 [INFO    ] scrape_busqueda              — ── Página 1/10
+2026-05-26 07:00:48 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=1&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:49 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 614,078 bytes
+2026-05-26 07:00:49 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:49 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:52 [INFO    ] scrape_busqueda              — ── Página 2/10
+2026-05-26 07:00:52 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=2&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:52 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 611,091 bytes
+2026-05-26 07:00:52 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:52 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:55 [INFO    ] scrape_busqueda              — ── Página 3/10
+2026-05-26 07:00:55 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=3&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:00:56 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 620,522 bytes
+2026-05-26 07:00:56 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:00:56 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:00:59 [INFO    ] scrape_busqueda              — ── Página 4/10
+2026-05-26 07:00:59 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=4&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:01:00 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 622,018 bytes
+2026-05-26 07:01:00 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:01:00 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:01:03 [INFO    ] scrape_busqueda              — ── Página 5/10
+2026-05-26 07:01:03 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=5&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:01:03 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 624,661 bytes
+2026-05-26 07:01:03 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:01:03 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:01:06 [INFO    ] scrape_busqueda              — ── Página 6/10
+2026-05-26 07:01:06 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=6&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:01:07 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 529,934 bytes
+2026-05-26 07:01:07 [DEBUG   ] extraer_desde_next_data      — __NEXT_DATA__: 20 anuncios parseados de 20 objetos
+2026-05-26 07:01:07 [INFO    ] obtener_anuncios_pagina      —   JSON: 20 anuncios
+2026-05-26 07:01:10 [INFO    ] scrape_busqueda              — ── Página 7/10
+2026-05-26 07:01:10 [DEBUG   ] obtener_anuncios_pagina      — GET https://www.autoscout24.es/lst/mercedes-benz/glc-220?atype=C&cy=D&damaged_listing=exclude&desc=0&page=7&powertype=kw&sort=price&ustate=N%2CU&fuel=D&fregfrom=2017&fregto=2021&kmto=100000&priceto=35000
+2026-05-26 07:01:10 [DEBUG   ] obtener_anuncios_pagina      — HTTP 200 — 360,512 bytes
+2026-05-26 07:01:10 [DEBUG   ] extraer_desde_next_data      — No se encontraron listings en __NEXT_DATA__
+2026-05-26 07:01:10 [DEBUG   ] extraer_desde_css            — CSS fallback: 0 cards encontradas
+2026-05-26 07:01:10 [INFO    ] obtener_anuncios_pagina      —   CSS:  0 anuncios
+2026-05-26 07:01:10 [INFO    ] scrape_busqueda              —   Página vacía — fin del scraping
+2026-05-26 07:01:10 [INFO    ] scrape_busqueda              — Scraping completado — 118 anuncios únicos (2 duplicados eliminados)
+2026-05-26 07:01:10 [INFO    ] detectar_cambios             —   Cambios: 8 nuevos | 9 bajadas de precio
+2026-05-26 07:01:11 [INFO    ] actualizar_sheets_busqueda   —   Sheets 'Mercedes GLC - Alemania': +3 nuevas, 115 actualizadas
+2026-05-26 07:01:12 [INFO    ] actualizar_sheets_busqueda   —   Hoja del día: 17 entradas
+2026-05-26 07:01:12 [DEBUG   ] guardar_estado               — [Mercedes GLC - Alemania] Estado JSON: 6609 chars para 118 anuncios
+2026-05-26 07:01:12 [INFO    ] guardar_estado               — [Mercedes GLC - Alemania] Estado guardado — 118 anuncios
+2026-05-26 07:01:12 [INFO    ] leer_hoja_completa           — [Mercedes GLC - Alemania] Histórico leído: 151 anuncios de Sheets
+2026-05-26 07:01:13 [INFO    ] leer_hoja_completa           — [Mercedes GLC - Alemania] Histórico leído: 151 anuncios de Sheets
+2026-05-26 07:01:13 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - Alemania] XLSX histórico adjunto: Mercedes_GLC_-_Alemania_2026-05-26_completo.xlsx (151 filas)
+2026-05-26 07:01:14 [INFO    ] enviar_email_busqueda        — [Mercedes GLC - Alemania] Email enviado a 1 destinatario(s): ant.rivas@gmail.com
+2026-05-26 07:01:14 [INFO    ] main                         — ════════════════════════════════════════════════════════════
+2026-05-26 07:01:14 [INFO    ] main                         — Generando y publicando dashboard en GitHub Pages...
+2026-05-26 07:01:15 [DEBUG   ] publicar_github_pages        — gh-pages: busquedas/mercedes-glc-espana.html publicado
+2026-05-26 07:01:17 [DEBUG   ] publicar_github_pages        — gh-pages: busquedas/mercedes-glc-alemania.html publicado
+2026-05-26 07:01:18 [DEBUG   ] publicar_github_pages        — gh-pages: index.html publicado
+2026-05-26 07:01:20 [DEBUG   ] publicar_github_pages        — gh-pages: editar_configuracion.html publicado
+2026-05-26 07:01:21 [DEBUG   ] publicar_github_pages        — gh-pages: ver_registros.html publicado
+2026-05-26 07:01:21 [INFO    ] publicar_github_pages        — GitHub Pages: 5/5 archivos HTML publicados
